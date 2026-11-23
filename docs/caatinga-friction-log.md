@@ -12,4 +12,7 @@ Honest notes from building this project with `@caatinga/cli` 3.14.0 and Stellar 
 | 2026-11-23 | `ctg zk build` with circomlib | circom is invoked without `-l`, so `include "circomlib/..."` does not resolve | Relative includes into `../../node_modules/circomlib/` |
 | 2026-11-23 | Off-chain witness inputs | No helper to compute Poseidon in the BLS12-381 field off-chain (circomlibjs is BN254 only) | Compiled a small hasher circuit and used its witness calculator |
 | 2026-11-23 | circom wasm witness in an ESM repo | `generate_witness.js` is CommonJS and breaks under `"type": "module"` | Wrote `{"type":"commonjs"}` into the generated `main_js/` |
-| 2026-11-23 | VPS build (disposable container) | No ready image with Rust 1.91.1 + Stellar CLI 28 + Node 22 | Toolchain assembled by hand; build and 21/21 tests OK, no other friction |
+| 2026-11-23 | `ctg doctor` in a Cargo workspace | Reports "soroban-sdk not found" for all 4 contracts because it does not follow `soroban-sdk = { workspace = true }` (false negative) | Ignored; the build works |
+| 2026-11-23 | `ctg status` | Repeats the "add a frontend section" hint for every contract (24 lines), no way to silence it | None |
+| 2026-11-23 | `ctg deploy` | Rewrites `caatinga.artifacts.json` and moves `"version": 2` to the end, a noisy diff | None |
+| 2026-11-23 | VPS testnet deploy | No ready image with Rust 1.91.1 + wasm32v1-none + Stellar CLI 28 + Node 22 | Toolchain assembled by hand in a disposable container |
