@@ -58,3 +58,14 @@ Contract IDs are written to `caatinga.artifacts.json` and wired through `${contr
 ## License
 
 Apache-2.0
+
+## Testnet deployment (phase 0, commit 7258c7d)
+
+| Contract | ID |
+| --- | --- |
+| circom_verifier | `CBV7I5JHH4VDF3BAU33N3BJ7RUGQBO725DD5FEJ2HYSVJY6MD2ZIOUBZ` |
+| midnight_verifier | `CDV3EF7E2SAHBIVXEL7Y3EI7SCX5HKFOWJOWU4LXCREXEKJYOJTGFARL` |
+| compliance_gate | `CDJ4Z2HJ6QWF7E45WBOEHUBCQB35EK2NU7EDV2QBCXKX7DDPU4E4B7JE` |
+| compliance_escrow | `CCZC6E2ZRQON7JXP7VBDS5UTXEJX23MTF4E7U55QIDEKE57PEWPX6KKM` |
+
+Admin: testnet-only identity `GB6JK2QZMCM55HQH64KMQE6G4MCZBQHRR66QEY6DI4UOKZMCKAZYRMEY`. `ctg smoke` passes (gate.admin, escrow.gate, midnight_verifier.vk_hash).
