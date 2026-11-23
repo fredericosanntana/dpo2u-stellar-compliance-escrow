@@ -1,0 +1,10 @@
+{
+  "project": "dpo2u-stellar-compliance-escrow",
+  "version": 2,
+  "networks": {
+    "testnet": {
+      "contracts": {},
+      "dependencyGraph": {}
+    }
+  }
+}

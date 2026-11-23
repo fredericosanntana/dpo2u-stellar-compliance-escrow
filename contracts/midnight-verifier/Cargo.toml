@@ -1,0 +1,15 @@
+[package]
+name = "midnight-verifier"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.91.1"
+description = "Verifies Midnight (midnight-proofs: Plonk + KZG over BLS12-381) proofs inside Soroban. Phase 2 of the PRD; this is the interface stub."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

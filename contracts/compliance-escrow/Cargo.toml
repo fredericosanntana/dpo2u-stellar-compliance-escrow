@@ -1,0 +1,16 @@
+[package]
+name = "compliance-escrow"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.91.1"
+description = "Locks a Stellar asset (SAC) and releases it only with a compliance proof accepted by compliance-gate; refunds on expiry or rejection."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+compliance-gate = { path = "../compliance-gate", features = ["testutils"] }
