@@ -1,10 +1,105 @@
 {
   "project": "dpo2u-stellar-compliance-escrow",
-  "version": 2,
   "networks": {
     "testnet": {
-      "contracts": {},
-      "dependencyGraph": {}
+      "contracts": {
+        "circom_verifier": {
+          "contractId": "CBV7I5JHH4VDF3BAU33N3BJ7RUGQBO725DD5FEJ2HYSVJY6MD2ZIOUBZ",
+          "wasmHash": "72cd0f5293936ea0b4b36f60a39db677ac908b0c3765f5246c48e138bc99037a",
+          "deployedAt": "2026-11-23T23:53:34.558Z",
+          "sourcePath": "./contracts/circom-verifier",
+          "wasmPath": "./target/wasm32v1-none/release/circom_verifier.wasm",
+          "dependencies": [],
+          "resolvedDeployArgs": {
+            "admin": "GB6JK2QZMCM55HQH64KMQE6G4MCZBQHRR66QEY6DI4UOKZMCKAZYRMEY"
+          },
+          "metadata": {
+            "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+            "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
+            "caatingaVersion": "3.14.0",
+            "network": "testnet",
+            "timestamp": "2026-11-23T23:53:34.553Z",
+            "checksum": "72cd0f5293936ea0b4b36f60a39db677ac908b0c3765f5246c48e138bc99037a"
+          }
+        },
+        "midnight_verifier": {
+          "contractId": "CDV3EF7E2SAHBIVXEL7Y3EI7SCX5HKFOWJOWU4LXCREXEKJYOJTGFARL",
+          "wasmHash": "3d8de8c5c731dc2cf672e0fe94eb68584963c25481265f9747ff398e4c50b19c",
+          "deployedAt": "2026-11-23T23:53:43.005Z",
+          "sourcePath": "./contracts/midnight-verifier",
+          "wasmPath": "./target/wasm32v1-none/release/midnight_verifier.wasm",
+          "dependencies": [],
+          "resolvedDeployArgs": {
+            "admin": "GB6JK2QZMCM55HQH64KMQE6G4MCZBQHRR66QEY6DI4UOKZMCKAZYRMEY"
+          },
+          "metadata": {
+            "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+            "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
+            "caatingaVersion": "3.14.0",
+            "network": "testnet",
+            "timestamp": "2026-11-23T23:53:43.003Z",
+            "checksum": "3d8de8c5c731dc2cf672e0fe94eb68584963c25481265f9747ff398e4c50b19c"
+          }
+        },
+        "compliance_gate": {
+          "contractId": "CDJ4Z2HJ6QWF7E45WBOEHUBCQB35EK2NU7EDV2QBCXKX7DDPU4E4B7JE",
+          "wasmHash": "20c0df802a18a487a7bc62987cc4cee83e3878dda417a4abd06dac0f504239ef",
+          "deployedAt": "2026-11-23T23:53:54.072Z",
+          "sourcePath": "./contracts/compliance-gate",
+          "wasmPath": "./target/wasm32v1-none/release/compliance_gate.wasm",
+          "dependencies": [
+            "circom_verifier",
+            "midnight_verifier"
+          ],
+          "resolvedDeployArgs": {
+            "admin": "GB6JK2QZMCM55HQH64KMQE6G4MCZBQHRR66QEY6DI4UOKZMCKAZYRMEY",
+            "circom_verifier": "CBV7I5JHH4VDF3BAU33N3BJ7RUGQBO725DD5FEJ2HYSVJY6MD2ZIOUBZ",
+            "midnight_verifier": "CDV3EF7E2SAHBIVXEL7Y3EI7SCX5HKFOWJOWU4LXCREXEKJYOJTGFARL"
+          },
+          "metadata": {
+            "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+            "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
+            "caatingaVersion": "3.14.0",
+            "network": "testnet",
+            "timestamp": "2026-11-23T23:53:54.070Z",
+            "checksum": "20c0df802a18a487a7bc62987cc4cee83e3878dda417a4abd06dac0f504239ef"
+          }
+        },
+        "compliance_escrow": {
+          "contractId": "CCZC6E2ZRQON7JXP7VBDS5UTXEJX23MTF4E7U55QIDEKE57PEWPX6KKM",
+          "wasmHash": "3a04893f22c1bb823f64c8ddfcea5151a32ebd1c08b65e0418457c57ed27c10c",
+          "deployedAt": "2026-11-23T23:54:05.057Z",
+          "sourcePath": "./contracts/compliance-escrow",
+          "wasmPath": "./target/wasm32v1-none/release/compliance_escrow.wasm",
+          "dependencies": [
+            "compliance_gate"
+          ],
+          "resolvedDeployArgs": {
+            "admin": "GB6JK2QZMCM55HQH64KMQE6G4MCZBQHRR66QEY6DI4UOKZMCKAZYRMEY",
+            "gate": "CDJ4Z2HJ6QWF7E45WBOEHUBCQB35EK2NU7EDV2QBCXKX7DDPU4E4B7JE"
+          },
+          "metadata": {
+            "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+            "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
+            "caatingaVersion": "3.14.0",
+            "network": "testnet",
+            "timestamp": "2026-11-23T23:54:05.054Z",
+            "checksum": "3a04893f22c1bb823f64c8ddfcea5151a32ebd1c08b65e0418457c57ed27c10c"
+          }
+        }
+      },
+      "dependencyGraph": {
+        "circom_verifier": [],
+        "midnight_verifier": [],
+        "compliance_gate": [
+          "circom_verifier",
+          "midnight_verifier"
+        ],
+        "compliance_escrow": [
+          "compliance_gate"
+        ]
+      }
     }
-  }
+  },
+  "version": 2
 }
