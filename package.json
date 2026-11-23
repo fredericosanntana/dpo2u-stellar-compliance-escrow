@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "license": "Apache-2.0",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "cargo test --workspace",
     "build": "ctg build",
@@ -15,6 +17,7 @@
   },
   "devDependencies": {
     "@caatinga/cli": "3.14.0",
-    "@caatinga/core": "3.14.0"
+    "@caatinga/core": "3.14.0",
+    "circomlib": "^2.0.5"
   }
 }

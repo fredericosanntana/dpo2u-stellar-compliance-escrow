@@ -2,6 +2,10 @@
 
 Filled with `ctg estimate deploy` / `ctg estimate verify` output once the testnet deploy runs (phase 1).
 
+## Phase 1 measured (local budget, real proof)
+
+`compliance-escrow.release` with a real 5-signal Groth16 proof (gate checks + circom-verifier + SAC transfer): **55,091,913 CPU instructions**, about 14% of the 400M cap.
+
 ## Measured building blocks (2026-11-23, soroban-sdk 27.0.6 budget, local)
 
 | Operation | CPU instructions |

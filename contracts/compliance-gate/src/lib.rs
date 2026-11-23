@@ -115,10 +115,16 @@ pub struct Verdict {
 #[contract]
 pub struct ComplianceGate;
 
-/// Largest value accepted as a public signal: 2^248 - 1 (always below the
-/// BLS12-381 scalar modulus, so no silent reduction can happen).
-fn fits_field(v: &U256) -> bool {
-    v.to_be_bytes().get(0) == Some(0)
+/// BLS12-381 scalar field modulus r, big-endian.
+const FR_MODULUS: [u8; 32] = [
+    0x73, 0xed, 0xa7, 0x53, 0x29, 0x9d, 0x7d, 0x48, 0x33, 0x39, 0xd8, 0x08, 0x09, 0xa1, 0xd8, 0x05,
+    0x53, 0xbd, 0xa4, 0x02, 0xff, 0xfe, 0x5b, 0xfe, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x01,
+];
+
+/// A pinned value must be a canonical scalar (< r): a value >= r would be
+/// reduced by the host and could never equal what a proof exposes.
+fn fits_field(env: &Env, v: &U256) -> bool {
+    *v < U256::from_be_bytes(env, &soroban_sdk::Bytes::from_array(env, &FR_MODULUS))
 }
 
 #[contractimpl]
@@ -159,9 +165,9 @@ impl ComplianceGate {
     /// Pins (or rotates) a policy. Admin only. Every change is an event.
     pub fn set_policy(env: Env, policy_id: u32, policy: Policy) -> Result<(), Error> {
         Self::admin(env.clone())?.require_auth();
-        if !fits_field(&policy.policy_hash)
-            || !fits_field(&policy.sanctions_root)
-            || !fits_field(&policy.pepper_commit)
+        if !fits_field(&env, &policy.policy_hash)
+            || !fits_field(&env, &policy.sanctions_root)
+            || !fits_field(&env, &policy.pepper_commit)
         {
             return Err(Error::ValueOutOfField);
         }

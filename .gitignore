@@ -9,3 +9,7 @@ circuits/**/build/
 *.zkey
 # local identities / secrets
 .stellar/
+tools/sanctions-tree/hasher/build/
+fixtures/snapshot.secret.json
+.artifacts/
+**/test_snapshots/

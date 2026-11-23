@@ -433,7 +433,12 @@ dependencies = [
 name = "compliance-escrow"
 version = "0.1.0"
 dependencies = [
+ "ark-bls12-381 0.4.0",
+ "ark-ff 0.4.2",
+ "ark-serialize 0.4.2",
+ "circom-verifier",
  "compliance-gate",
+ "serde_json",
  "soroban-sdk",
 ]
 

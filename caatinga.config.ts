@@ -46,6 +46,16 @@ export default defineConfig({
       networkPassphrase: "Test SDF Network ; September 2015",
     },
   },
+  zk: {
+    circuits: {
+      sanctions: {
+        path: "./circuits/sanctions",
+        protocol: "groth16",
+        curve: "bls12381",
+        verifierContract: "circom_verifier",
+      },
+    },
+  },
   // Read-only checks run by `ctg wire` / `ctg smoke` after a full deploy:
   // each contract must point at the address Caatinga deployed for its dependency.
   postDeployRead: [
