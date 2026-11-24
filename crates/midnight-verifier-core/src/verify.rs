@@ -103,8 +103,14 @@ pub fn verify<B: Backend>(b: &B, vk: &Vk, pi: &[[u8; 32]], proof: &[u8]) -> Resu
     };
     // `EvaluationDomain::l_i_range`
     let l_i_range = |from: i32, to_excl: i32| -> Result<Vec<B::Fr>, Error> {
-        let rots: Vec<i32> = (from..to_excl).collect();
-        let w: Vec<B::Fr> = rots.iter().map(|&r| rot(r)).collect();
+        // omega^r for r in from..to_excl: one pow, then one mul per step
+        let mut w: Vec<B::Fr> = Vec::with_capacity((to_excl - from).max(0) as usize);
+        let mut cur = rot(from);
+        for _ in from..to_excl {
+            let next = b.mul(&cur, &omega);
+            w.push(cur);
+            cur = next;
+        }
         let mut d: Vec<B::Fr> = w.iter().map(|wr| b.sub(&x, wr)).collect();
         batch_invert(b, &mut d)?;
         let common = b.mul(&b.sub(&xn, &b.one()), &n_inv);

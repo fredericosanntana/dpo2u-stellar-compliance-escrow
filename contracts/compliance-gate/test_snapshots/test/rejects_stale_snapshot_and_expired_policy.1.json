@@ -157,6 +157,14 @@
                   "map": [
                     {
                       "key": {
+                        "symbol": "context_encoding"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "context_index"
                       },
                       "val": {
@@ -362,6 +370,14 @@
               "durability": "persistent",
               "val": {
                 "map": [
+                  {
+                    "key": {
+                      "symbol": "context_encoding"
+                    },
+                    "val": {
+                      "u32": 0
+                    }
+                  },
                   {
                     "key": {
                       "symbol": "context_index"

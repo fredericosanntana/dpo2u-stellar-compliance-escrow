@@ -29,6 +29,13 @@ fn zkir_hash_through_wasm() {
     run("zkir-hash");
 }
 
+/// Real TravelRuleGate v12 `evaluateTransfer` proof captured on Midnight
+/// preview (proof-server 9.0.1), 417 statement values.
+#[test]
+fn travel_rule_gate_v12_through_wasm() {
+    run("travel-rule-gate-v12");
+}
+
 fn run(name: &str) {
     let Ok(wasm) = std::fs::read(WASM) else {
         eprintln!("skipped: {WASM} not built");
@@ -63,6 +70,9 @@ fn run(name: &str) {
     env.cost_estimate().budget().reset_unlimited();
     assert!(c.verify(&vk, &Bytes::from_slice(&env, &proof), &h, &s));
     let b = env.cost_estimate().budget();
+    if std::env::var("BUDGET_DETAIL").is_ok() {
+        println!("{b}");
+    }
     println!(
         "wasm midnight verify [{name}]: cpu {} instructions, mem {} bytes",
         b.cpu_instruction_cost(),

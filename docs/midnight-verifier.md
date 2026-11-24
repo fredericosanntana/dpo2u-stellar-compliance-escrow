@@ -8,11 +8,12 @@ A real proof from the official prover (Poseidon preimage, k = 6, one lookup and 
 
 | Measured (soroban-sdk 27.0.6 budget) | CPU instructions | Memory |
 | --- | --- | --- |
-| `verify` through the release wasm (Poseidon, zk-stdlib) | 149,019,409 (37% of the 400M cap) | 2.67 MB |
-| `verify` through the release wasm (ZKIR v3 `transient_hash`, ledger prover) | 176,683,364 (44%) | 2.82 MB |
+| `verify` through the release wasm (Poseidon, zk-stdlib) | 135,552,417 (34% of the 400M cap) | 2.69 MB |
+| `verify` through the release wasm (ZKIR v3 `transient_hash`, ledger prover) | 161,255,183 (40%) | 2.84 MB |
+| `verify` through the release wasm, **real TravelRuleGate v12 proof** (k=17, 417 statement values) | 312,864,758 (78%) | 6.06 MB |
 | `verify` as native contract (host calls only) | 116,564,361 | 1.02 MB |
 
-Wasm size: 77 KB. The SVK for this circuit is 7.7 KB; the proof is 2,912 bytes plus 22 hints.
+Wasm size: 91 KB (`opt-level = 3` for the verifier crates). The SVK for this circuit is 7.7 KB; the proof is 2,912 bytes plus 22 hints.
 
 ## How it is built
 
@@ -50,18 +51,22 @@ The transcript always absorbs the proof's own compressed bytes, so a hint can on
 | `vk_hash` | sha256 of the SVK registered in `midnight-verifier` |
 | `statement_len` | exact statement length of the circuit |
 | `pins` | `(index, value)` pairs the statement must carry: sanctions root, rule-pack hash, gate address, as the circuit exposes them |
-| `context_index` | statement index that must equal the escrow `context` (no replay on another escrow) |
+| `context_index`, `context_encoding` | where the escrow `context` sits in the statement (no replay on another escrow): `CTX_FIELD` = one value; `CTX_COMPACT_BYTES32` = a Compact `Bytes<32>` (TravelRuleGate `transfer_id`), two values `[last byte, first 31 bytes LE]` |
 | `valid_until` | the lane refuses proofs after this ledger time |
 
 A Compact statement is `[binding_input, public transcript..]` (midnight-zkir `ir_vm.rs`), so the layout is circuit specific and lives in the policy, not in code. `check_midnight(policy_id, context, proof, hints, statement)` checks the length, the pins, the context and the expiry, then calls `midnight-verifier.verify`. `compliance-escrow.release_midnight(id, proof, hints, statement)` pays only if it passes; any refusal reverts and the escrow stays `Funded`.
 
-End to end test (`contracts/compliance-escrow/tests/midnight_proof.rs`): a ZKIR v3 circuit proved with the ledger prover (`midnight-export zkir-context`) whose statement is `[binding_input, commitment, context]`, bound to `escrow.context(1)`. Real midnight-verifier, gate and escrow with a SAC as USDC: released, tampered proof and wrong context refused. `release_midnight` with the verifier as wasm: **177,409,336 CPU (44% of the cap), 3.0 MB**. This circuit stands in for the TravelRuleGate; the real gate proof plugs into the same lane with its own pins.
+End to end test (`contracts/compliance-escrow/tests/midnight_proof.rs`): a ZKIR v3 circuit proved with the ledger prover (`midnight-export zkir-context`) whose statement is `[binding_input, commitment, context]`, bound to `escrow.context(1)`. Real midnight-verifier, gate and escrow with a SAC as USDC: released, tampered proof and wrong context refused. `release_midnight` with the verifier as wasm: **161,933,352 CPU (40% of the cap), 3.0 MB**. This circuit stands in for the TravelRuleGate; the real gate proof plugs into the same lane with its own pins.
 
 ## Real TravelRuleGate proof (captured on preview)
 
-`evaluateTransfer` (TravelRuleGate v12, compactc 0.36.0, ZKIR v3.1, `verifier-key[v7]`): k = 17, 9 advice, 37 fixed, 10 permutation columns, 6 lookups, 1 trashcan, 35 gates (931 ops), 5 point sets; proof 5,744 B; SVK 14,460 B. The core exports it without changes.
+`evaluateTransfer` (TravelRuleGate v12, compactc 0.36.0, ZKIR v3.1, `verifier-key[v7]`): k = 17, 9 advice, 37 fixed, 10 permutation columns, 6 lookups, 1 trashcan, 35 gates (931 ops), 5 point sets; proof 5,744 B; SVK 14,460 B. The core exports it without changes, and the captured proof (417 statement values, 39 hints) **verifies in the Soroban wasm: 312,864,758 CPU (78% of the 400M cap), 6.1 MB** (`contracts/midnight-verifier/tests/wasm_cost.rs`, fixture `fixtures/midnight/travel-rule-gate-v12`). The verifier crates are built with `opt-level = 3` (wasm 91 KB): the same proof cost 361M at `opt-level = "z"`. The largest costs are the 39 G1 subgroup checks of the hints (92.8M), the final MSM (65.6M), wasm execution (63.0M) and field conversions of the statement (22.7M).
 
 The `/prove` request carries every private witness (including the contract owner secret, because the circuit starts with `assert_owner()`), so it is never published. The statement is public: `[binding_input, communications_commitment, public transcript..]`, all of which appear in the Midnight transaction. `midnight-export statement <request> <response> <pi.hex>` runs where the request is, proves once locally to get the statement in the ledger's order, and writes `pi.hex` only after the captured proof verifies against it. `midnight-export captured` then builds the SVK, hints and checks from the public files.
+
+### Binding the TravelRuleGate proof to an escrow
+
+The agent evaluates on Midnight with `transfer_id = escrow.context(id)` (64 hex, accepted by the CLI and the agent queue; the circuit only refuses a `transfer_id` evaluated twice). In the `evaluateTransfer` statement each `Bytes<32>` argument and ledger value appears as `[b[31], LE(b[0..31])]`. Positions (0-based; the layout is fixed, 417 values for PASS and FAIL): `transfer_id` 27 (member check) and 202 (key of the `status` insert), `policy_hash` 290, `list_root` 311, `pepper_commit` 373, `provider_id` 114, verdict `status` 208 (1 = PASS, 2 = FAIL, confirmed against a real FAIL capture) and `fail_reason` 228. The Midnight policy pins those, requires status 1 and fail_reason 0, and puts the context at 202 with `CTX_COMPACT_BYTES32` (`contracts/compliance-escrow/tests/travel_rule_gate.rs`: the real proof passes the lane at 313.0M CPU; another transfer id, another rule pack, a FAIL verdict or any edited statement value is refused). Not checked on Stellar yet: the verdict's `issued_at` (394) and `valid_until` (353) against the ledger time.
 
 ## Trust model
 

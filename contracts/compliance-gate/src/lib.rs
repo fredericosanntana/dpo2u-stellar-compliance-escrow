@@ -40,6 +40,13 @@ pub const SIG_CONTEXT: u32 = 3;
 pub const SIG_ISSUED_AT: u32 = 4;
 pub const NUM_SIGNALS: u32 = 5;
 
+/// Midnight lane: the context is one statement value.
+pub const CTX_FIELD: u32 = 0;
+/// Midnight lane: the context is a Compact `Bytes<32>` (e.g. TravelRuleGate's
+/// `transfer_id`), which ZKIR encodes as two values: `[index]` = the last
+/// byte, `[index + 1]` = the first 31 bytes read little-endian.
+pub const CTX_COMPACT_BYTES32: u32 = 1;
+
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
@@ -105,8 +112,11 @@ pub struct MidnightPolicy {
     pub vk_hash: BytesN<32>,
     pub statement_len: u32,
     pub pins: Vec<Pin>,
-    /// Statement index that must equal the escrow context.
+    /// Statement index where the escrow context starts.
     pub context_index: u32,
+    /// How the context appears in the statement: `CTX_FIELD` (one value)
+    /// or `CTX_COMPACT_BYTES32` (a Compact `Bytes<32>`, two values).
+    pub context_encoding: u32,
     pub valid_until: u64,
 }
 
@@ -176,6 +186,27 @@ const FR_MODULUS: [u8; 32] = [
 /// reduced by the host and could never equal what a proof exposes.
 fn fits_field(env: &Env, v: &U256) -> bool {
     *v < U256::from_be_bytes(env, &soroban_sdk::Bytes::from_array(env, &FR_MODULUS))
+}
+
+/// The statement values that carry `context` under `encoding`.
+fn context_values(env: &Env, encoding: u32, context: &U256) -> Vec<U256> {
+    let mut out = Vec::new(env);
+    if encoding == CTX_COMPACT_BYTES32 {
+        let mut be = [0u8; 32];
+        context.to_be_bytes().copy_into_slice(&mut be);
+        let mut last = [0u8; 32];
+        last[31] = be[31];
+        // first 31 bytes as a little-endian integer, written big-endian
+        let mut head = [0u8; 32];
+        for i in 0..31 {
+            head[31 - i] = be[i];
+        }
+        out.push_back(U256::from_be_bytes(env, &Bytes::from_array(env, &last)));
+        out.push_back(U256::from_be_bytes(env, &Bytes::from_array(env, &head)));
+    } else {
+        out.push_back(context.clone());
+    }
+    out
 }
 
 #[contractimpl]
@@ -295,11 +326,22 @@ impl ComplianceGate {
         policy: MidnightPolicy,
     ) -> Result<(), Error> {
         Self::admin(env.clone())?.require_auth();
-        if policy.context_index >= policy.statement_len {
+        let ctx_width = match policy.context_encoding {
+            CTX_FIELD => 1,
+            CTX_COMPACT_BYTES32 => 2,
+            _ => return Err(Error::BadMidnightPolicy),
+        };
+        let ctx_end = policy
+            .context_index
+            .checked_add(ctx_width)
+            .ok_or(Error::BadMidnightPolicy)?;
+        if ctx_end > policy.statement_len {
             return Err(Error::BadMidnightPolicy);
         }
         for pin in policy.pins.iter() {
-            if pin.index >= policy.statement_len || pin.index == policy.context_index {
+            if pin.index >= policy.statement_len
+                || (pin.index >= policy.context_index && pin.index < ctx_end)
+            {
                 return Err(Error::BadMidnightPolicy);
             }
             if !fits_field(&env, &pin.value) {
@@ -345,8 +387,13 @@ impl ComplianceGate {
                 return Err(Error::PinMismatch);
             }
         }
-        if statement.get(p.context_index).unwrap() != context {
-            return Err(Error::ContextMismatch);
+        for (i, v) in context_values(&env, p.context_encoding, &context)
+            .iter()
+            .enumerate()
+        {
+            if statement.get(p.context_index + i as u32).unwrap() != v {
+                return Err(Error::ContextMismatch);
+            }
         }
         if env.ledger().timestamp() > p.valid_until {
             return Err(Error::PolicyExpired);

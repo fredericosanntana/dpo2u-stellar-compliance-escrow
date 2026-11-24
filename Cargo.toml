@@ -25,3 +25,11 @@ lto = true
 [profile.release-with-logs]
 inherits = "release"
 debug-assertions = true
+
+# the Midnight verifier is compute bound in wasm: optimize it for speed
+[profile.release.package.midnight-verifier]
+opt-level = 3
+[profile.release.package.midnight-verifier-core]
+opt-level = 3
+[profile.release.package.blake2b_simd]
+opt-level = 3
