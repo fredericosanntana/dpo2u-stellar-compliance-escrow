@@ -1,7 +1,7 @@
 import { defineConfig } from "@caatinga/core";
 
 // Deploy order (Caatinga resolves it from dependsOn):
-//   circom-verifier, midnight-verifier  ->  compliance-gate  ->  compliance-escrow
+//   circom-verifier, midnight-verifier  ->  compliance-gate  ->  compliance-escrow, compliance-dvp
 // Contract IDs flow through ${contracts.<name>.contractId}; nothing is copied by hand.
 const wasm = (name: string) => `./target/wasm32v1-none/release/${name}.wasm`;
 
@@ -39,6 +39,14 @@ export default defineConfig({
         gate: "${contracts.compliance_gate.contractId}",
       },
     },
+    compliance_dvp: {
+      path: "./contracts/compliance-dvp",
+      wasm: wasm("compliance_dvp"),
+      dependsOn: ["compliance_gate"],
+      deployArgs: {
+        gate: "${contracts.compliance_gate.contractId}",
+      },
+    },
   },
   networks: {
     testnet: {
@@ -67,6 +75,12 @@ export default defineConfig({
     },
     {
       contract: "compliance_escrow",
+      method: "gate",
+      kind: "read",
+      expect: { matcher: "contains", value: "${contracts.compliance_gate.contractId}" },
+    },
+    {
+      contract: "compliance_dvp",
       method: "gate",
       kind: "read",
       expect: { matcher: "contains", value: "${contracts.compliance_gate.contractId}" },

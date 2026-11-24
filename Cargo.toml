@@ -6,6 +6,7 @@ members = [
     "contracts/midnight-verifier",
     "contracts/compliance-gate",
     "contracts/compliance-escrow",
+    "contracts/compliance-dvp",
     "crates/midnight-verifier-core",
 ]
 

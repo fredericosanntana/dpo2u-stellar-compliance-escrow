@@ -1,0 +1,17 @@
+[package]
+name = "compliance-dvp"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.91.1"
+description = "Delivery versus payment of a tokenized security (CVM style) against testnet USDC, settled only with a compliance proof accepted by compliance-gate."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+compliance-gate = { path = "../compliance-gate", features = ["testutils"] }
+midnight-verifier = { path = "../midnight-verifier" }
