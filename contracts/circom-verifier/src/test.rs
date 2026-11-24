@@ -204,9 +204,9 @@ fn test() {
 
     let output = Vec::from_array(&env, [Fr::from_u256(U256::from_u32(&env, 33))]);
     let res = client.verify_proof(&vk, &proof, &output);
-    assert_eq!(res, true);
+    assert!(res);
 
     let bad_output = Vec::from_array(&env, [Fr::from_u256(U256::from_u32(&env, 22))]);
     let res = client.verify_proof(&vk, &proof, &bad_output);
-    assert_eq!(res, false);
+    assert!(!res);
 }

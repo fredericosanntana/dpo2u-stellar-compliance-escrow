@@ -1,0 +1,8 @@
+{
+  "note": "FICTITIOUS sanctions snapshot for testnet demos. Entries = trunc248(Poseidon(pepper, trunc248(sha256(id)))).",
+  "size": 10,
+  "depth": 16,
+  "issued_at": "1795477842",
+  "pepper_commit": "38216923359891490446895681853316219075571229633386339615389243345244985644342",
+  "sanctions_root": "12417303445787009375051823123455240565974823255249481294716165937932072521367"
+}

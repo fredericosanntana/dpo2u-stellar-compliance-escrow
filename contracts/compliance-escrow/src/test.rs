@@ -1,4 +1,3 @@
-#![cfg(test)]
 extern crate std;
 
 use super::*;
@@ -33,7 +32,7 @@ fn setup<'a>() -> Setup<'a> {
     let sac = env.register_stellar_asset_contract_v2(issuer);
     let usdc = TokenClient::new(&env, &sac.address());
     let payer = Address::generate(&env);
-    StellarAssetClient::new(&env, &sac.address()).mint(&payer, &1_000_0000000);
+    StellarAssetClient::new(&env, &sac.address()).mint(&payer, &10_000_000_000);
 
     let mock_id = env.register(MockVerifier, ());
     let mock = MockVerifierClient::new(&env, &mock_id);
@@ -82,12 +81,12 @@ fn deposit(s: &Setup, amount: i128) -> u64 {
 #[test]
 fn pass_releases_to_beneficiary() {
     let s = setup();
-    let id = deposit(&s, 100_0000000);
-    assert_eq!(s.usdc.balance(&s.escrow.address), 100_0000000);
+    let id = deposit(&s, 1_000_000_000);
+    assert_eq!(s.usdc.balance(&s.escrow.address), 1_000_000_000);
     let ctx = s.escrow.context(&id);
     let sig = signals(&s.env, &s.gate.policy(&1), &ctx, 2_000);
     s.escrow.release(&id, &p(&s), &sig);
-    assert_eq!(s.usdc.balance(&s.beneficiary), 100_0000000);
+    assert_eq!(s.usdc.balance(&s.beneficiary), 1_000_000_000);
     assert_eq!(s.usdc.balance(&s.escrow.address), 0);
     assert_eq!(s.escrow.get(&id).state, State::Released);
     // Cannot be released or refunded twice.
@@ -133,7 +132,7 @@ fn refund_only_after_deadline() {
         Err(Ok(Error::Expired))
     );
     s.escrow.refund(&id);
-    assert_eq!(s.usdc.balance(&s.payer), 1_000_0000000);
+    assert_eq!(s.usdc.balance(&s.payer), 10_000_000_000);
     assert_eq!(s.escrow.get(&id).state, State::Refunded);
 }
 
