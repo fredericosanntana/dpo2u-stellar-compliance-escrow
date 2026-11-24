@@ -1,0 +1,17 @@
+[package]
+name = "midnight-verifier-core"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "no_std verifier for Midnight (midnight-proofs 0.8.2, Plonk + KZG over BLS12-381) proofs, generic over the curve backend"
+publish = false
+
+[lib]
+crate-type = ["rlib"]
+
+[features]
+default = []
+std = []
+
+[dependencies]
+blake2b_simd = { version = "=1.0.5", default-features = false }

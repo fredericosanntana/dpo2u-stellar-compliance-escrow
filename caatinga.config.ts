@@ -76,7 +76,7 @@ export default defineConfig({
     reads: [
       { contract: "compliance_gate", method: "admin", expect: { matcher: "reachable" } },
       { contract: "compliance_escrow", method: "gate", expect: { matcher: "reachable" } },
-      { contract: "midnight_verifier", method: "vk_hash", expect: { matcher: "reachable" } },
+      { contract: "midnight_verifier", method: "admin", expect: { matcher: "reachable" } },
     ],
   },
 });

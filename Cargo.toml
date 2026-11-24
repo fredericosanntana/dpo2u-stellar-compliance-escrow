@@ -1,10 +1,12 @@
 [workspace]
+exclude = ["tools/midnight-export"]
 resolver = "2"
 members = [
     "contracts/circom-verifier",
     "contracts/midnight-verifier",
     "contracts/compliance-gate",
     "contracts/compliance-escrow",
+    "crates/midnight-verifier-core",
 ]
 
 [workspace.dependencies]

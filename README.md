@@ -13,7 +13,7 @@ Status: **phase 0** (scaffold). Testnet only. No real funds.
 | `compliance-escrow` | Locks a Stellar asset (SAC), releases it with an accepted proof bound to that escrow, refunds after the deadline | working, tested |
 | `compliance-gate` | Pins the policy per `policy_id` (sanctions root, pepper commitment, policy hash, freshness window, verifier key) and checks proofs against it | working, tested (Circom lane) |
 | `circom-verifier` | Groth16 / BLS12-381 verifier from Caatinga's `zk-starter` | template, circuit lands in phase 1 |
-| `midnight-verifier` | Verifies Midnight's own proofs (Plonk + KZG over BLS12-381) inside Soroban | interface stub, refuses every proof until phase 2 |
+| `midnight-verifier` | Verifies Midnight's own proofs (Plonk + KZG over BLS12-381) inside Soroban | verifies real midnight-zk-stdlib 2.4.0 proofs in wasm, 149M CPU for the Poseidon example (`docs/midnight-verifier.md`) |
 
 ```
 payer --deposit--> compliance-escrow --check_circom--> compliance-gate --verify_proof--> circom-verifier
@@ -49,9 +49,9 @@ Contract IDs are written to `caatinga.artifacts.json` and wired through `${contr
 
 ## Roadmap
 
-0. Scaffold, escrow and gate (this PR)
-1. `sanctions_nonmembership.circom` (indexed Merkle tree, pepper scheme), end-to-end BR → MX testnet USDC payment, failure paths
-2. `midnight-verifier`: no_std port of the midnight-proofs verifier, generated per circuit
+0. Scaffold, escrow and gate (done)
+1. Sanctions non-membership circuit (indexed Merkle tree, pepper scheme), real Groth16 release of testnet USDC (done, on testnet)
+2. `midnight-verifier`: no_std port of the midnight-proofs 0.8.2 verifier, VK exported to an SVK blob (done)
 3. Real Midnight TravelRuleGate proof releasing testnet USDC on Stellar
 4. CVM package, demo video
 

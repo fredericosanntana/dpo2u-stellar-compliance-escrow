@@ -6,6 +6,10 @@ Filled with `ctg estimate deploy` / `ctg estimate verify` output once the testne
 
 `compliance-escrow.release` with a real 5-signal Groth16 proof (gate checks + circom-verifier + SAC transfer): **55,091,913 CPU instructions**, about 14% of the 400M cap.
 
+## Phase 2 measured (real Midnight proof)
+
+`midnight-verifier.verify` with a real midnight-zk-stdlib 2.4.0 proof (Poseidon preimage, k=6), through the release wasm: **149,011,495 CPU instructions** (37% of the cap), 2.67 MB memory. Details in `docs/midnight-verifier.md`.
+
 ## Measured building blocks (2026-11-23, soroban-sdk 27.0.6 budget, local)
 
 | Operation | CPU instructions |
