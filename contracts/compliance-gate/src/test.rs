@@ -11,6 +11,7 @@ struct Setup<'a> {
     env: Env,
     gate: ComplianceGateClient<'a>,
     mock: MockVerifierClient<'a>,
+    midnight: MockMidnightClient<'a>,
     policy: Policy,
 }
 
@@ -22,15 +23,19 @@ fn setup<'a>() -> Setup<'a> {
     let mock_id = env.register(MockVerifier, ());
     let mock = MockVerifierClient::new(&env, &mock_id);
     mock.set_result(&true);
-    let midnight = Address::generate(&env);
-    let gate_id = env.register(ComplianceGate, (admin, mock_id, midnight));
+    let midnight_id = env.register(MockMidnight, ());
+    let midnight = MockMidnightClient::new(&env, &midnight_id);
+    midnight.set_result(&true);
+    let gate_id = env.register(ComplianceGate, (admin, mock_id, midnight_id));
     let gate = ComplianceGateClient::new(&env, &gate_id);
     let policy = policy(&env);
     gate.set_policy(&1, &policy);
+    gate.set_midnight_policy(&1, &midnight_policy(&env));
     Setup {
         env,
         gate,
         mock,
+        midnight,
         policy,
     }
 }
@@ -161,11 +166,84 @@ fn set_policy_requires_admin_and_field_values() {
     assert_eq!(env.auths()[0].0, admin);
 }
 
+fn statement(env: &Env, binding: u128, policy_hash: u128, ctx: &U256) -> soroban_sdk::Vec<U256> {
+    let mut v = soroban_sdk::Vec::new(env);
+    v.push_back(u(env, binding));
+    v.push_back(u(env, policy_hash));
+    v.push_back(ctx.clone());
+    v
+}
+
+fn midnight_check(s: &Setup, ctx: &U256, st: &soroban_sdk::Vec<U256>) -> Result<bool, Error> {
+    let proof = soroban_sdk::Bytes::new(&s.env);
+    let hints = soroban_sdk::Vec::new(&s.env);
+    match s.gate.try_check_midnight(&1, ctx, &proof, &hints, st) {
+        Ok(Ok(v)) => Ok(v),
+        Err(Ok(e)) => Err(e),
+        other => panic!("{other:?}"),
+    }
+}
+
 #[test]
-fn midnight_lane_is_explicitly_not_implemented() {
+fn midnight_lane_accepts_pinned_statement_with_context() {
     let s = setup();
+    let ctx = u(&s.env, 77);
     assert_eq!(
-        s.gate.try_check_midnight(&1, &u(&s.env, 1)),
-        Err(Ok(Error::MidnightLaneNotImplemented))
+        midnight_check(&s, &ctx, &statement(&s.env, 5, 0xA4, &ctx)),
+        Ok(true)
     );
+}
+
+#[test]
+fn midnight_lane_rejects_mismatches_and_invalid_proof() {
+    let s = setup();
+    let ctx = u(&s.env, 77);
+    let ok = statement(&s.env, 5, 0xA4, &ctx);
+    assert_eq!(
+        midnight_check(&s, &ctx, &statement(&s.env, 5, 0xA5, &ctx)),
+        Err(Error::PinMismatch)
+    );
+    assert_eq!(
+        midnight_check(&s, &u(&s.env, 78), &ok),
+        Err(Error::ContextMismatch)
+    );
+    let mut short = ok.clone();
+    short.pop_back();
+    assert_eq!(midnight_check(&s, &ctx, &short), Err(Error::BadSignalCount));
+    s.midnight.set_result(&false);
+    assert_eq!(midnight_check(&s, &ctx, &ok), Err(Error::InvalidProof));
+    s.midnight.set_result(&true);
+    s.env.ledger().set_timestamp(10_001);
+    assert_eq!(midnight_check(&s, &ctx, &ok), Err(Error::PolicyExpired));
+}
+
+#[test]
+fn midnight_policy_is_validated_and_admin_only() {
+    let s = setup();
+    let mut p = midnight_policy(&s.env);
+    p.context_index = 3;
+    assert_eq!(
+        s.gate.try_set_midnight_policy(&2, &p),
+        Err(Ok(Error::BadMidnightPolicy))
+    );
+    let mut p = midnight_policy(&s.env);
+    p.context_index = 1; // collides with a pin
+    assert_eq!(
+        s.gate.try_set_midnight_policy(&2, &p),
+        Err(Ok(Error::BadMidnightPolicy))
+    );
+    assert_eq!(
+        s.gate.try_midnight_policy(&9),
+        Err(Ok(Error::UnknownMidnightPolicy))
+    );
+    let env = Env::default();
+    let admin = Address::generate(&env);
+    let gate_id = env.register(
+        ComplianceGate,
+        (admin, Address::generate(&env), Address::generate(&env)),
+    );
+    let gate = ComplianceGateClient::new(&env, &gate_id);
+    assert!(gate
+        .try_set_midnight_policy(&1, &midnight_policy(&env))
+        .is_err());
 }

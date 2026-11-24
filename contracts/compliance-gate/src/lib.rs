@@ -17,13 +17,20 @@
 //!
 //! Public signal layout of the Circom lane (fixed; see docs/circuit.md):
 //! `[sanctions_root, pepper_commit, policy_hash, context, issued_at]`.
+//!
+//! Midnight lane: a native Midnight proof (Compact circuit, ledger prover),
+//! checked by `midnight-verifier` against an SVK pinned by its sha256. The
+//! statement of a Compact circuit is `[binding_input, public transcript..]`,
+//! and its layout is circuit specific, so the Midnight policy pins the
+//! statement length, the values at chosen indices (sanctions root, policy
+//! hash, gate address..) and the index that must carry the escrow context.
 
 use soroban_sdk::{
     contract, contractclient, contracterror, contractevent, contractimpl, contracttype,
     crypto::bls12_381::{
         Bls12381Fr as Fr, Bls12381G1Affine as G1Affine, Bls12381G2Affine as G2Affine,
     },
-    Address, Env, Vec, U256,
+    Address, Bytes, BytesN, Env, Vec, U256,
 };
 
 pub const SIG_ROOT: u32 = 0;
@@ -48,7 +55,9 @@ pub enum Error {
     PolicyExpired = 9,
     InvalidProof = 10,
     ValueOutOfField = 11,
-    MidnightLaneNotImplemented = 12,
+    UnknownMidnightPolicy = 12,
+    PinMismatch = 13,
+    BadMidnightPolicy = 14,
 }
 
 #[derive(Clone)]
@@ -80,6 +89,27 @@ pub struct Policy {
     pub vk: VerificationKey,
 }
 
+/// One statement value the Midnight lane requires.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[contracttype]
+pub struct Pin {
+    pub index: u32,
+    pub value: U256,
+}
+
+/// Policy of the Midnight lane for one `policy_id`.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[contracttype]
+pub struct MidnightPolicy {
+    /// sha256 of the SVK registered in `midnight-verifier`.
+    pub vk_hash: BytesN<32>,
+    pub statement_len: u32,
+    pub pins: Vec<Pin>,
+    /// Statement index that must equal the escrow context.
+    pub context_index: u32,
+    pub valid_until: u64,
+}
+
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
@@ -87,6 +117,27 @@ enum DataKey {
     CircomVerifier,
     MidnightVerifier,
     Policy(u32),
+    MidnightPolicy(u32),
+}
+
+/// Interface of `midnight-verifier`.
+#[contractclient(name = "MidnightVerifierClient")]
+pub trait MidnightVerifierInterface {
+    fn verify(
+        env: Env,
+        vk_hash: BytesN<32>,
+        proof: Bytes,
+        hints: Vec<BytesN<96>>,
+        statement: Vec<U256>,
+    ) -> bool;
+}
+
+#[contractevent(topics = ["midnight_policy_set"])]
+pub struct MidnightPolicySet {
+    #[topic]
+    pub policy_id: u32,
+    pub vk_hash: BytesN<32>,
+    pub valid_until: u64,
 }
 
 /// Interface of `circom-verifier` (Caatinga zk-starter verifier).
@@ -237,10 +288,80 @@ impl ComplianceGate {
         Ok(true)
     }
 
-    /// Midnight lane (PRD phase 3): the native Midnight proof of the
-    /// TravelRuleGate. Not wired yet.
-    pub fn check_midnight(_env: Env, _policy_id: u32, _context: U256) -> Result<bool, Error> {
-        Err(Error::MidnightLaneNotImplemented)
+    /// Pins (or rotates) the Midnight lane of a policy. Admin only.
+    pub fn set_midnight_policy(
+        env: Env,
+        policy_id: u32,
+        policy: MidnightPolicy,
+    ) -> Result<(), Error> {
+        Self::admin(env.clone())?.require_auth();
+        if policy.context_index >= policy.statement_len {
+            return Err(Error::BadMidnightPolicy);
+        }
+        for pin in policy.pins.iter() {
+            if pin.index >= policy.statement_len || pin.index == policy.context_index {
+                return Err(Error::BadMidnightPolicy);
+            }
+            if !fits_field(&env, &pin.value) {
+                return Err(Error::ValueOutOfField);
+            }
+        }
+        env.storage()
+            .persistent()
+            .set(&DataKey::MidnightPolicy(policy_id), &policy);
+        MidnightPolicySet {
+            policy_id,
+            vk_hash: policy.vk_hash.clone(),
+            valid_until: policy.valid_until,
+        }
+        .publish(&env);
+        Ok(())
+    }
+
+    pub fn midnight_policy(env: Env, policy_id: u32) -> Result<MidnightPolicy, Error> {
+        env.storage()
+            .persistent()
+            .get(&DataKey::MidnightPolicy(policy_id))
+            .ok_or(Error::UnknownMidnightPolicy)
+    }
+
+    /// Midnight lane: accepts only if the statement has the pinned length,
+    /// carries every pinned value and the escrow context, the policy is in
+    /// force, and `midnight-verifier` accepts the proof for the pinned SVK.
+    pub fn check_midnight(
+        env: Env,
+        policy_id: u32,
+        context: U256,
+        proof: Bytes,
+        hints: Vec<BytesN<96>>,
+        statement: Vec<U256>,
+    ) -> Result<bool, Error> {
+        let p = Self::midnight_policy(env.clone(), policy_id)?;
+        if statement.len() != p.statement_len {
+            return Err(Error::BadSignalCount);
+        }
+        for pin in p.pins.iter() {
+            if statement.get(pin.index).unwrap() != pin.value {
+                return Err(Error::PinMismatch);
+            }
+        }
+        if statement.get(p.context_index).unwrap() != context {
+            return Err(Error::ContextMismatch);
+        }
+        if env.ledger().timestamp() > p.valid_until {
+            return Err(Error::PolicyExpired);
+        }
+        let verifier = MidnightVerifierClient::new(&env, &Self::midnight_verifier(env.clone())?);
+        if !verifier.verify(&p.vk_hash, &proof, &hints, &statement) {
+            return Err(Error::InvalidProof);
+        }
+        Verdict {
+            policy_id,
+            context,
+            pass: true,
+        }
+        .publish(&env);
+        Ok(true)
     }
 }
 

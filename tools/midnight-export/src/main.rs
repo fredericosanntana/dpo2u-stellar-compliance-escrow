@@ -3,10 +3,12 @@
 //! verifier agrees with `midnight_zk_stdlib::verify` on valid and tampered
 //! inputs. Writes `<out>/<name>/{vk.svk,proof.bin,pi.hex}`.
 //!
-//! SRS_DIR must hold `bls_filecoin_2p19` (see midnight-zk-stdlib docs).
+//! SRS: Midnight's `bls_midnight_2p{k}` (MIDNIGHT_PARAMS_DIR, else the
+//! bundled 2p14). Not the Filecoin SRS: the ledger prover uses Midnight's.
 
 mod export;
 mod native;
+mod zkir;
 
 use std::{fs, path::Path};
 
@@ -22,7 +24,7 @@ use midnight_proofs::{
     plonk::Error,
 };
 use midnight_verifier_core::{verify, Error as VErr, Vk};
-use midnight_zk_stdlib::{utils::plonk_api::filecoin_srs, Relation, ZkStdLib, ZkStdLibArch};
+use midnight_zk_stdlib::{Relation, ZkStdLib, ZkStdLibArch};
 use rand::{rngs::OsRng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
@@ -78,7 +80,7 @@ fn hints(vk: &Vk, pi: &[[u8; 32]], proof: &[u8]) -> Vec<[u8; 96]> {
     b.hints.into_inner()
 }
 
-fn check(name: &str, vk: &Vk, pi: &[[u8; 32]], proof: &[u8]) {
+pub fn check(name: &str, vk: &Vk, pi: &[[u8; 32]], proof: &[u8]) {
     let b = native::Native::default();
     assert_eq!(
         verify(&b, vk, pi, proof),
@@ -120,12 +122,52 @@ fn check(name: &str, vk: &Vk, pi: &[[u8; 32]], proof: &[u8]) {
     println!("{name}: native no_std verifier OK; {rejected} tampered proofs rejected ({by_pairing} by the pairing check)");
 }
 
-fn main() {
-    let out = std::env::args()
-        .nth(1)
-        .unwrap_or_else(|| "fixtures/midnight".into());
+pub fn report(name: &str, vk: &Vk, proof: &[u8]) {
+    let bytes = vk.encode();
+    assert_eq!(Vk::decode(&bytes).unwrap(), *vk, "SVK round trip");
+    println!(
+        "{name} k={}: advice {} fixed {} perm cols {} lookups {} trashcans {} gates {} ops {} sets {} proof {} B svk {} B",
+        vk.k,
+        vk.advice_phase.len(),
+        vk.fixed_commitments.len(),
+        vk.perm_columns.len(),
+        vk.lookups.len(),
+        vk.trashcans.len(),
+        vk.gates.len(),
+        vk.gates.iter().map(|g| g.0.len()).sum::<usize>(),
+        vk.plan.len(),
+        proof.len(),
+        bytes.len()
+    );
+}
+
+pub fn write(out: &str, name: &str, vk: &Vk, pi: &[[u8; 32]], proof: &[u8]) {
+    let dir = Path::new(out).join(name);
+    fs::create_dir_all(&dir).unwrap();
+    fs::write(dir.join("vk.svk"), vk.encode()).unwrap();
+    fs::write(dir.join("proof.bin"), proof).unwrap();
+    fs::write(
+        dir.join("pi.hex"),
+        pi.iter().map(hex::encode).collect::<Vec<_>>().join("\n"),
+    )
+    .unwrap();
+    let h = hints(vk, pi, proof);
+    fs::write(
+        dir.join("hints.hex"),
+        h.iter().map(hex::encode).collect::<Vec<_>>().join("\n"),
+    )
+    .unwrap();
+    println!(
+        "wrote {} ({} statement values, {} hints)",
+        dir.display(),
+        pi.len(),
+        h.len()
+    );
+}
+
+fn poseidon(out: &str) {
     const K: u32 = 6;
-    let srs = filecoin_srs(K);
+    let srs = zkir::midnight_srs(K);
     let relation = PoseidonPreimage;
     let mvk = midnight_zk_stdlib::setup_vk(&srs, &relation);
     let pk = midnight_zk_stdlib::setup_pk(&relation, &mvk);
@@ -146,42 +188,48 @@ fn main() {
     let s_g2 = vp.s_g2().to_affine();
     let n_g2 = -G2Affine::generator();
     let vk = export::export(mvk.vk(), 1, &s_g2, &n_g2);
-    let bytes = vk.encode();
-    assert_eq!(Vk::decode(&bytes).unwrap(), vk, "SVK round trip");
     let pi: Vec<[u8; 32]> = PoseidonPreimage::format_instance(&instance)
         .unwrap()
         .iter()
         .map(le)
         .collect();
-    println!(
-        "poseidon k={K}: advice {} fixed {} perm cols {} lookups {} trashcans {} gates {} ops {} sets {} proof {} B svk {} B",
-        vk.advice_phase.len(),
-        vk.fixed_commitments.len(),
-        vk.perm_columns.len(),
-        vk.lookups.len(),
-        vk.trashcans.len(),
-        vk.gates.len(),
-        vk.gates.iter().map(|g| g.0.len()).sum::<usize>(),
-        vk.plan.len(),
-        proof.len(),
-        bytes.len()
-    );
+    report("poseidon", &vk, &proof);
     check("poseidon", &vk, &pi, &proof);
+    write(out, "poseidon", &vk, &pi, &proof);
+}
 
-    let dir = Path::new(&out).join("poseidon");
-    fs::create_dir_all(&dir).unwrap();
-    fs::write(dir.join("vk.svk"), &bytes).unwrap();
-    fs::write(dir.join("proof.bin"), &proof).unwrap();
-    fs::write(
-        dir.join("pi.hex"),
-        pi.iter().map(hex::encode).collect::<Vec<_>>().join("\n"),
-    )
-    .unwrap();
-    let h = hints(&vk, &pi, &proof);
-    fs::write(
-        dir.join("hints.hex"),
-        h.iter().map(hex::encode).collect::<Vec<_>>().join("\n"),
-    )
-    .unwrap();
-    println!("wrote {} ({} hints)", dir.display(), h.len());
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let usage = "usage: midnight-export poseidon <out> | zkir-selftest <out> | zkir-context <name> <context_be_hex> <out> | compact <name> <ir> <prover> <verifier> <preimage> <out> | inspect <verifier> [proof-response] | captured <name> <verifier> <proof-response> <pi.hex> <out> | statement <prove-request> <proof-response> <out pi.hex>";
+    match a.get(1).map(String::as_str) {
+        Some("poseidon") => poseidon(&a[2]),
+        Some("zkir-selftest") => zkir::selftest(&a[2]),
+        Some("zkir-context") if a.len() == 5 => zkir::context(&a[2], &a[3], &a[4]),
+        Some("inspect") => zkir::inspect(Path::new(&a[2]), a.get(3).map(Path::new)),
+        Some("captured") if a.len() == 7 => zkir::captured(
+            &a[2],
+            Path::new(&a[3]),
+            Path::new(&a[4]),
+            Path::new(&a[5]),
+            &a[6],
+        ),
+        Some("statement") if a.len() == 5 => zkir::statement(
+            Path::new(&a[2]),
+            Path::new(&a[3]),
+            "see docs/midnight-verifier.md",
+            Path::new(&a[4]),
+        ),
+        Some("compact") if a.len() == 8 => zkir::from_files(
+            &a[2],
+            Path::new(&a[3]),
+            Path::new(&a[4]),
+            Path::new(&a[5]),
+            Path::new(&a[6]),
+            &a[7],
+        ),
+        _ => {
+            eprintln!("{usage}");
+            std::process::exit(2);
+        }
+    }
 }

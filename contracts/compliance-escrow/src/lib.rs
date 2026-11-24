@@ -22,7 +22,7 @@ use soroban_sdk::{
     },
     token,
     xdr::ToXdr,
-    Address, Bytes, Env, Vec, U256,
+    Address, Bytes, BytesN, Env, Vec, U256,
 };
 
 const CONTEXT_DOMAIN: &[u8] = b"dpo2u.compliance-escrow.context/1";
@@ -79,6 +79,14 @@ pub trait GateInterface {
         context: U256,
         proof: Proof,
         pub_signals: Vec<Fr>,
+    ) -> bool;
+    fn check_midnight(
+        env: Env,
+        policy_id: u32,
+        context: U256,
+        proof: Bytes,
+        hints: Vec<BytesN<96>>,
+        statement: Vec<U256>,
     ) -> bool;
 }
 
@@ -210,14 +218,7 @@ impl ComplianceEscrow {
     /// Pays the beneficiary if the gate accepts the proof for this escrow.
     /// Anyone may submit the proof (the relayer cannot forge one).
     pub fn release(env: Env, id: u64, proof: Proof, pub_signals: Vec<Fr>) -> Result<(), Error> {
-        let mut e = Self::get(env.clone(), id)?;
-        if e.state != State::Funded {
-            return Err(Error::NotFunded);
-        }
-        if env.ledger().timestamp() > e.deadline {
-            return Err(Error::Expired);
-        }
-        let context = Self::context(env.clone(), id)?;
+        let (e, context) = Self::releasable(&env, id)?;
         // Traps (reverting everything) if the gate refuses.
         GateClient::new(&env, &Self::gate(env.clone())?).check_circom(
             &e.policy_id,
@@ -225,14 +226,29 @@ impl ComplianceEscrow {
             &proof,
             &pub_signals,
         );
-        e.state = State::Released;
-        env.storage().persistent().set(&DataKey::Escrow(id), &e);
-        token::Client::new(&env, &e.token).transfer(
-            &env.current_contract_address(),
-            &e.beneficiary,
-            &e.amount,
+        Self::pay(&env, id, e);
+        Ok(())
+    }
+
+    /// Same as `release`, with a native Midnight proof (Compact circuit)
+    /// through the gate's Midnight lane. `hints` are the uncompressed forms
+    /// of the proof's G1 points (see docs/midnight-verifier.md).
+    pub fn release_midnight(
+        env: Env,
+        id: u64,
+        proof: Bytes,
+        hints: Vec<BytesN<96>>,
+        statement: Vec<U256>,
+    ) -> Result<(), Error> {
+        let (e, context) = Self::releasable(&env, id)?;
+        GateClient::new(&env, &Self::gate(env.clone())?).check_midnight(
+            &e.policy_id,
+            &context,
+            &proof,
+            &hints,
+            &statement,
         );
-        Released { id }.publish(&env);
+        Self::pay(&env, id, e);
         Ok(())
     }
 
@@ -256,6 +272,31 @@ impl ComplianceEscrow {
         );
         Refunded { id }.publish(&env);
         Ok(())
+    }
+}
+
+impl ComplianceEscrow {
+    fn releasable(env: &Env, id: u64) -> Result<(Escrow, U256), Error> {
+        let e = Self::get(env.clone(), id)?;
+        if e.state != State::Funded {
+            return Err(Error::NotFunded);
+        }
+        if env.ledger().timestamp() > e.deadline {
+            return Err(Error::Expired);
+        }
+        let context = Self::context(env.clone(), id)?;
+        Ok((e, context))
+    }
+
+    fn pay(env: &Env, id: u64, mut e: Escrow) {
+        e.state = State::Released;
+        env.storage().persistent().set(&DataKey::Escrow(id), &e);
+        token::Client::new(env, &e.token).transfer(
+            &env.current_contract_address(),
+            &e.beneficiary,
+            &e.amount,
+        );
+        Released { id }.publish(env);
     }
 }
 
