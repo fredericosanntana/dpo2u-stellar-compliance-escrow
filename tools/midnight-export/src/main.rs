@@ -200,11 +200,25 @@ fn poseidon(out: &str) {
 
 fn main() {
     let a: Vec<String> = std::env::args().collect();
-    let usage = "usage: midnight-export poseidon <out> | zkir-selftest <out> | zkir-context <name> <context_be_hex> <out> | compact <name> <ir> <prover> <verifier> <preimage> <out>";
+    let usage = "usage: midnight-export poseidon <out> | zkir-selftest <out> | zkir-context <name> <context_be_hex> <out> | compact <name> <ir> <prover> <verifier> <preimage> <out> | inspect <verifier> [proof-response] | captured <name> <verifier> <proof-response> <pi.hex> <out> | statement <prove-request> <proof-response> <out pi.hex>";
     match a.get(1).map(String::as_str) {
         Some("poseidon") => poseidon(&a[2]),
         Some("zkir-selftest") => zkir::selftest(&a[2]),
         Some("zkir-context") if a.len() == 5 => zkir::context(&a[2], &a[3], &a[4]),
+        Some("inspect") => zkir::inspect(Path::new(&a[2]), a.get(3).map(Path::new)),
+        Some("captured") if a.len() == 7 => zkir::captured(
+            &a[2],
+            Path::new(&a[3]),
+            Path::new(&a[4]),
+            Path::new(&a[5]),
+            &a[6],
+        ),
+        Some("statement") if a.len() == 5 => zkir::statement(
+            Path::new(&a[2]),
+            Path::new(&a[3]),
+            "see docs/midnight-verifier.md",
+            Path::new(&a[4]),
+        ),
         Some("compact") if a.len() == 8 => zkir::from_files(
             &a[2],
             Path::new(&a[3]),
