@@ -4,7 +4,7 @@
 
 > Midnight keeps the secret, Stellar moves the money, and the proof is the same.
 
-Status: **phase 3 done on testnet**: a real Midnight TravelRuleGate proof released testnet USDC on Stellar. Testnet only. No real funds.
+Status: **phase 4 done on testnet**: a real Midnight TravelRuleGate proof released testnet USDC on Stellar (phase 3) and settled a delivery-versus-payment trade of a test security against testnet USDC (phase 4). Testnet only. No real funds.
 
 ## Contracts
 
@@ -54,7 +54,7 @@ Contract IDs are written to `caatinga.artifacts.json` and wired through `${contr
 1. Sanctions non-membership circuit (indexed Merkle tree, pepper scheme), real Groth16 release of testnet USDC (done, on testnet)
 2. `midnight-verifier`: no_std port of the midnight-proofs 0.8.2 verifier, VK exported to an SVK blob (done)
 3. Real Midnight TravelRuleGate proof releasing testnet USDC on Stellar (done, on testnet)
-4. CVM package: `compliance-dvp` (delivery versus payment of a receivable token against USDC, settled only with a compliance proof; the issuer's holder authorization still applies), [docs/cvm-package.md](docs/cvm-package.md), [demo video script](docs/demo-video-script.md) (done in code; testnet deploy of the DvP next)
+4. CVM package: `compliance-dvp` (delivery versus payment of a receivable token against USDC, settled only with a compliance proof; the issuer's holder authorization still applies), [docs/cvm-package.md](docs/cvm-package.md), [demo video script](docs/demo-video-script.md) (done, on testnet)
 
 ## License
 
@@ -103,3 +103,24 @@ A real Midnight proof released testnet USDC on Stellar. The TravelRuleGate v12 o
 | `release_midnight` | `ef3e413fae9ddea704600ec217c871a13303cd02d4f69e4bc980439e55debf30`: 328,471,689 CPU instructions (82% of the cap), 0.0162 XLM, events verdict pass=true, transfer 1 USDC, released |
 
 The proof, statement and hints are in `fixtures/midnight/escrow-bound/`. The sanctions snapshot and pepper are fictitious and disposable, and no personal data is involved. Total testnet fees were 9.995 XLM, almost all of it wasm upload. Build the wasm with `cargo build --release --target wasm32v1-none` (`npm run build`): the verifier crates are tuned for speed (`opt-level = 3`), which is what the 313M figure assumes.
+
+## Testnet deployment (phase 4, commit 0af7ec9)
+
+Delivery versus payment of a test security against testnet USDC, settled with a real Midnight proof. The seller offered 10 DPOSEC (a test receivable token whose issuer has `AUTH_REVOCABLE`, so it controls who may hold it) for 250 testnet USDC, and the buyer funded the trade. The TravelRuleGate v12 on Midnight preview then evaluated a transfer whose `transfer_id` is `compliance-dvp.context(1)`. `settle_midnight` verified that proof through the gate's Midnight lane and moved both legs in one call.
+
+| Contract / account | ID |
+| --- | --- |
+| compliance-dvp | `CBXIFUYO54NEY7PAAQOKWXFA2Z77BAKSDRVWZ7B7S43QGHG4I5XDGWVE` (gate `CDF3F3XCMDIYLGC46JK5IMBQBIM657SEQ6PCUMIOORWVVIQ4OQ2523MG`) |
+| DPOSEC issuer (`AUTH_REVOCABLE`) | `GCV5T3PKJPZIIWHMVUQWBNA3LHXPTLZGPWNTDOZRGG5M7YFMRSCVQICN` |
+| DPOSEC SAC | `CB6YLZYHWW5CLY4E3YIGRN7HNM3DVG2QKVCFMIGK2LWVFV2ATJYNC5ZX` |
+
+| Step | Tx / value |
+| --- | --- |
+| `offer` 10 DPOSEC for 250 USDC, trade 1 | `f6265e8df18cad3becbe758e282208c5c1fbc71963af944e082ad804f41ce258` |
+| `fund` 250 USDC | `552a81d505c1d813c8ec14a5683fa16b596e7c8cdcba8df72c0fbfc907eae31a` |
+| `context(1)` | `00977ba13d51cd64f08cc2c230fe3c7382c86ba74c12d0a73ea436460d82f446` |
+| Midnight preview `evaluateTransfer` PASS, `transfer_id` = context | tx `00400f00f7fa897927263e3b6e6357618829343bbb187c8c86fbe6ad55bceb2aec`, block 251180 |
+| `set_midnight_policy` 2 (new snapshot: list root and pepper commitment; the rest as policy 1, which stays intact) | `35cb8b72022fb6e6db10940532b1984b357c1bf8ea4841691037d58eba8e4966` |
+| `settle_midnight` | `18e0a4157b6b20a1b0cfc6ff7127c9176761f8f9455ef561d4d449058fb368ed`: 328,713,978 CPU instructions (82% of the cap), 0.0166 XLM; 10 DPOSEC to the buyer and 250 USDC to the seller in the same call, trade state `Settled` |
+
+The proof, statement and hints are in `fixtures/midnight/dvp-bound/`. As in phase 3, the sanctions snapshot and pepper are fictitious and disposable, and no personal data is involved.
