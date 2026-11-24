@@ -207,6 +207,26 @@
             "timestamp": "2026-11-24T04:54:40.183Z",
             "checksum": "c0854804e327c4fb397dd7e8c9125cd10589d8814115c55aa7ef02ac037081b0"
           }
+        },
+        "compliance_dvp": {
+          "contractId": "CBXIFUYO54NEY7PAAQOKWXFA2Z77BAKSDRVWZ7B7S43QGHG4I5XDGWVE",
+          "wasmHash": "e958c4aca04f76f6d044859ae8de7ca6d90012510de800937a4f9a6b880cd547",
+          "deployedAt": "2026-11-24T12:26:30.144Z",
+          "sourcePath": "./contracts/compliance-dvp",
+          "wasmPath": "./target/wasm32v1-none/release/compliance_dvp.wasm",
+          "dependencies": [
+            "compliance_gate"
+          ],
+          "resolvedDeployArgs": {
+            "gate": "CDF3F3XCMDIYLGC46JK5IMBQBIM657SEQ6PCUMIOORWVVIQ4OQ2523MG"
+          },
+          "metadata": {
+            "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
+            "caatingaVersion": "3.14.0",
+            "network": "testnet",
+            "timestamp": "2026-11-24T12:26:30.139Z",
+            "checksum": "e958c4aca04f76f6d044859ae8de7ca6d90012510de800937a4f9a6b880cd547"
+          }
         }
       },
       "dependencyGraph": {
@@ -217,6 +237,9 @@
           "midnight_verifier"
         ],
         "compliance_escrow": [
+          "compliance_gate"
+        ],
+        "compliance_dvp": [
           "compliance_gate"
         ]
       }
