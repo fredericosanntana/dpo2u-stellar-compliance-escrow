@@ -4,47 +4,85 @@
     "testnet": {
       "contracts": {
         "circom_verifier": {
-          "contractId": "CBV7I5JHH4VDF3BAU33N3BJ7RUGQBO725DD5FEJ2HYSVJY6MD2ZIOUBZ",
+          "contractId": "CAO374QVP2NFCXVOXCY7ZTR6FJ4FRP6UXC2O3NFIOKK7SYANWMFSW3FP",
           "wasmHash": "72cd0f5293936ea0b4b36f60a39db677ac908b0c3765f5246c48e138bc99037a",
-          "deployedAt": "2026-11-23T23:53:34.558Z",
+          "deployedAt": "2026-11-24T00:01:23.298Z",
           "sourcePath": "./contracts/circom-verifier",
           "wasmPath": "./target/wasm32v1-none/release/circom_verifier.wasm",
           "dependencies": [],
           "resolvedDeployArgs": {
             "admin": "GB6JK2QZMCM55HQH64KMQE6G4MCZBQHRR66QEY6DI4UOKZMCKAZYRMEY"
           },
+          "history": [
+            {
+              "contractId": "CBV7I5JHH4VDF3BAU33N3BJ7RUGQBO725DD5FEJ2HYSVJY6MD2ZIOUBZ",
+              "wasmHash": "72cd0f5293936ea0b4b36f60a39db677ac908b0c3765f5246c48e138bc99037a",
+              "deployedAt": "2026-11-23T23:53:34.558Z",
+              "supersededAt": "2026-11-24T00:01:23.298Z",
+              "reason": "force-redeploy",
+              "upgradeType": "new-contract",
+              "metadata": {
+                "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+                "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
+                "caatingaVersion": "3.14.0",
+                "network": "testnet",
+                "timestamp": "2026-11-23T23:53:34.553Z",
+                "checksum": "72cd0f5293936ea0b4b36f60a39db677ac908b0c3765f5246c48e138bc99037a"
+              }
+            }
+          ],
+          "upgradeStrategy": "redeploy",
           "metadata": {
-            "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+            "gitCommit": "8ed63351ee59cfa3c495160c3eb0a15f8b88b21c",
             "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
             "caatingaVersion": "3.14.0",
             "network": "testnet",
-            "timestamp": "2026-11-23T23:53:34.553Z",
+            "timestamp": "2026-11-24T00:01:23.288Z",
             "checksum": "72cd0f5293936ea0b4b36f60a39db677ac908b0c3765f5246c48e138bc99037a"
           }
         },
         "midnight_verifier": {
-          "contractId": "CDV3EF7E2SAHBIVXEL7Y3EI7SCX5HKFOWJOWU4LXCREXEKJYOJTGFARL",
+          "contractId": "CC5KN73DOKIGPEJH3UTLNUSWCTFPP3SZUUSKIRZJRKCWFELNAQHHVQ4U",
           "wasmHash": "3d8de8c5c731dc2cf672e0fe94eb68584963c25481265f9747ff398e4c50b19c",
-          "deployedAt": "2026-11-23T23:53:43.005Z",
+          "deployedAt": "2026-11-24T00:01:28.302Z",
           "sourcePath": "./contracts/midnight-verifier",
           "wasmPath": "./target/wasm32v1-none/release/midnight_verifier.wasm",
           "dependencies": [],
           "resolvedDeployArgs": {
             "admin": "GB6JK2QZMCM55HQH64KMQE6G4MCZBQHRR66QEY6DI4UOKZMCKAZYRMEY"
           },
+          "history": [
+            {
+              "contractId": "CDV3EF7E2SAHBIVXEL7Y3EI7SCX5HKFOWJOWU4LXCREXEKJYOJTGFARL",
+              "wasmHash": "3d8de8c5c731dc2cf672e0fe94eb68584963c25481265f9747ff398e4c50b19c",
+              "deployedAt": "2026-11-23T23:53:43.005Z",
+              "supersededAt": "2026-11-24T00:01:28.302Z",
+              "reason": "force-redeploy",
+              "upgradeType": "new-contract",
+              "metadata": {
+                "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+                "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
+                "caatingaVersion": "3.14.0",
+                "network": "testnet",
+                "timestamp": "2026-11-23T23:53:43.003Z",
+                "checksum": "3d8de8c5c731dc2cf672e0fe94eb68584963c25481265f9747ff398e4c50b19c"
+              }
+            }
+          ],
+          "upgradeStrategy": "redeploy",
           "metadata": {
-            "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+            "gitCommit": "8ed63351ee59cfa3c495160c3eb0a15f8b88b21c",
             "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
             "caatingaVersion": "3.14.0",
             "network": "testnet",
-            "timestamp": "2026-11-23T23:53:43.003Z",
+            "timestamp": "2026-11-24T00:01:28.298Z",
             "checksum": "3d8de8c5c731dc2cf672e0fe94eb68584963c25481265f9747ff398e4c50b19c"
           }
         },
         "compliance_gate": {
-          "contractId": "CDJ4Z2HJ6QWF7E45WBOEHUBCQB35EK2NU7EDV2QBCXKX7DDPU4E4B7JE",
-          "wasmHash": "20c0df802a18a487a7bc62987cc4cee83e3878dda417a4abd06dac0f504239ef",
-          "deployedAt": "2026-11-23T23:53:54.072Z",
+          "contractId": "CBH2YR3HNYZBVZBSZNMTUL3XCR6I2WCMZ6GVWQM76MOKX7RT2V7CQID5",
+          "wasmHash": "b59d19c5f47789bb5c7950974cbd2256a969d3bec4b1d9ddc0b0c60888a01ab6",
+          "deployedAt": "2026-11-24T00:01:39.514Z",
           "sourcePath": "./contracts/compliance-gate",
           "wasmPath": "./target/wasm32v1-none/release/compliance_gate.wasm",
           "dependencies": [
@@ -53,22 +91,41 @@
           ],
           "resolvedDeployArgs": {
             "admin": "GB6JK2QZMCM55HQH64KMQE6G4MCZBQHRR66QEY6DI4UOKZMCKAZYRMEY",
-            "circom_verifier": "CBV7I5JHH4VDF3BAU33N3BJ7RUGQBO725DD5FEJ2HYSVJY6MD2ZIOUBZ",
-            "midnight_verifier": "CDV3EF7E2SAHBIVXEL7Y3EI7SCX5HKFOWJOWU4LXCREXEKJYOJTGFARL"
+            "circom_verifier": "CAO374QVP2NFCXVOXCY7ZTR6FJ4FRP6UXC2O3NFIOKK7SYANWMFSW3FP",
+            "midnight_verifier": "CC5KN73DOKIGPEJH3UTLNUSWCTFPP3SZUUSKIRZJRKCWFELNAQHHVQ4U"
           },
+          "history": [
+            {
+              "contractId": "CDJ4Z2HJ6QWF7E45WBOEHUBCQB35EK2NU7EDV2QBCXKX7DDPU4E4B7JE",
+              "wasmHash": "20c0df802a18a487a7bc62987cc4cee83e3878dda417a4abd06dac0f504239ef",
+              "deployedAt": "2026-11-23T23:53:54.072Z",
+              "supersededAt": "2026-11-24T00:01:39.514Z",
+              "reason": "force-redeploy",
+              "upgradeType": "new-contract",
+              "metadata": {
+                "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+                "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
+                "caatingaVersion": "3.14.0",
+                "network": "testnet",
+                "timestamp": "2026-11-23T23:53:54.070Z",
+                "checksum": "20c0df802a18a487a7bc62987cc4cee83e3878dda417a4abd06dac0f504239ef"
+              }
+            }
+          ],
+          "upgradeStrategy": "redeploy",
           "metadata": {
-            "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+            "gitCommit": "8ed63351ee59cfa3c495160c3eb0a15f8b88b21c",
             "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
             "caatingaVersion": "3.14.0",
             "network": "testnet",
-            "timestamp": "2026-11-23T23:53:54.070Z",
-            "checksum": "20c0df802a18a487a7bc62987cc4cee83e3878dda417a4abd06dac0f504239ef"
+            "timestamp": "2026-11-24T00:01:39.508Z",
+            "checksum": "b59d19c5f47789bb5c7950974cbd2256a969d3bec4b1d9ddc0b0c60888a01ab6"
           }
         },
         "compliance_escrow": {
-          "contractId": "CCZC6E2ZRQON7JXP7VBDS5UTXEJX23MTF4E7U55QIDEKE57PEWPX6KKM",
+          "contractId": "CCX6ZTGXA363MKEQR3LVGHPEWDMIADQEWOEZ7VCPFLMMMTXS4E5R473T",
           "wasmHash": "3a04893f22c1bb823f64c8ddfcea5151a32ebd1c08b65e0418457c57ed27c10c",
-          "deployedAt": "2026-11-23T23:54:05.057Z",
+          "deployedAt": "2026-11-24T00:01:44.319Z",
           "sourcePath": "./contracts/compliance-escrow",
           "wasmPath": "./target/wasm32v1-none/release/compliance_escrow.wasm",
           "dependencies": [
@@ -76,14 +133,33 @@
           ],
           "resolvedDeployArgs": {
             "admin": "GB6JK2QZMCM55HQH64KMQE6G4MCZBQHRR66QEY6DI4UOKZMCKAZYRMEY",
-            "gate": "CDJ4Z2HJ6QWF7E45WBOEHUBCQB35EK2NU7EDV2QBCXKX7DDPU4E4B7JE"
+            "gate": "CBH2YR3HNYZBVZBSZNMTUL3XCR6I2WCMZ6GVWQM76MOKX7RT2V7CQID5"
           },
+          "history": [
+            {
+              "contractId": "CCZC6E2ZRQON7JXP7VBDS5UTXEJX23MTF4E7U55QIDEKE57PEWPX6KKM",
+              "wasmHash": "3a04893f22c1bb823f64c8ddfcea5151a32ebd1c08b65e0418457c57ed27c10c",
+              "deployedAt": "2026-11-23T23:54:05.057Z",
+              "supersededAt": "2026-11-24T00:01:44.319Z",
+              "reason": "force-redeploy",
+              "upgradeType": "new-contract",
+              "metadata": {
+                "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+                "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
+                "caatingaVersion": "3.14.0",
+                "network": "testnet",
+                "timestamp": "2026-11-23T23:54:05.054Z",
+                "checksum": "3a04893f22c1bb823f64c8ddfcea5151a32ebd1c08b65e0418457c57ed27c10c"
+              }
+            }
+          ],
+          "upgradeStrategy": "redeploy",
           "metadata": {
-            "gitCommit": "7258c7d0a9a94ce825cbbf570bcbad2a3e45b13d",
+            "gitCommit": "8ed63351ee59cfa3c495160c3eb0a15f8b88b21c",
             "rustcVersion": "rustc 1.91.1 (ed61e7d7e 2025-11-07)",
             "caatingaVersion": "3.14.0",
             "network": "testnet",
-            "timestamp": "2026-11-23T23:54:05.054Z",
+            "timestamp": "2026-11-24T00:01:44.317Z",
             "checksum": "3a04893f22c1bb823f64c8ddfcea5151a32ebd1c08b65e0418457c57ed27c10c"
           }
         }
