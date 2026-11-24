@@ -1,0 +1,43 @@
+{
+  "captured_at": "2026-11-24T01:21:00Z",
+  "network": "midnight-preview",
+  "source": {
+    "repo": "fredericosanntana/dpo2u-midnight",
+    "commit": "10b135c2d305beb59a0ec770f1fb2de98719451e",
+    "contract": "TravelRuleGate",
+    "codeVersion": "v12",
+    "circuit": "evaluateTransfer"
+  },
+  "compiler": {
+    "compactc": "0.36.0",
+    "compiler_commit": "b5d9e4dfc532fe47011c4f6296e254f4853eb469",
+    "language_version": "0.28.0",
+    "runtime_version": "0.21.0"
+  },
+  "proof_server": {
+    "image": "midnightntwrk/proof-server:9.0.1",
+    "image_id": "sha256:7383c6b1dd48192d2748166dde05d8ef76dbc996db99fd95063afe79e71b0b70"
+  },
+  "npm": {
+    "@midnight-ntwrk/ledger-v9": "1.0.1",
+    "@midnight-ntwrk/compact-runtime": "0.21.0",
+    "@midnight-ntwrk/compact-js": "3.0.0",
+    "@midnight-ntwrk/onchain-runtime-v3": "3.1.2",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "5.0.0"
+  },
+  "vps_agent": {
+    "commit": "1aea951",
+    "same_versions_as_above": true,
+    "gate": "shared TravelRuleGate v11 (bafbb45c…), not the gate used for this capture"
+  },
+  "gates": {
+    "capture_gate_v12_shared_preview": "61292c3188a5cdd22aa225be140977ca27bbc847a10723d23512a9550ebe16fe",
+    "staging_institution_gate": { "codeVersion": "v11", "address": "fc80569d96a4555a51fd695d3f0e009eeb44043d46b7567fd9986a3bf0e2d4f5" }
+  },
+  "capture": {
+    "route": "POST /prove",
+    "evaluate_tx_identifier": "007fb2a2ae931eda662e7c1f43a609f0e4a8b74ad381df1cca734d7c8d9609a8e4",
+    "block_height": 244492,
+    "verdict": { "status": 1, "fail_reason": 0 }
+  }
+}
