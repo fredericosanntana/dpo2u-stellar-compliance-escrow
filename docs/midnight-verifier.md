@@ -8,7 +8,8 @@ A real proof from the official prover (Poseidon preimage, k = 6, one lookup and 
 
 | Measured (soroban-sdk 27.0.6 budget) | CPU instructions | Memory |
 | --- | --- | --- |
-| `verify` through the release wasm | 149,011,495 (37% of the 400M cap) | 2.67 MB |
+| `verify` through the release wasm (Poseidon, zk-stdlib) | 149,019,409 (37% of the 400M cap) | 2.67 MB |
+| `verify` through the release wasm (ZKIR v2 `transient_hash`, ledger prover) | 175,206,978 (44%) | 2.82 MB |
 | `verify` as native contract (host calls only) | 116,564,361 | 1.02 MB |
 
 Wasm size: 77 KB. The SVK for this circuit is 7.7 KB; the proof is 2,912 bytes plus 22 hints.
@@ -49,13 +50,16 @@ A `true` means the statement satisfies the circuit behind the pinned VK. It does
 - The committed instance is fixed to the identity, as `midnight_zk_stdlib::verify(.., None, ..)` does, with one public instance column. Other shapes return `UnsupportedVk`.
 - The cost grows with the number of commitments, queries and gate operations, not with k. Phase 3 measures a real TravelRuleGate (Compact) proof, which is a larger circuit than this Poseidon example. The gate's `check_midnight` lane is wired in phase 3.
 - The verifier follows midnight-proofs 0.8.2 without `truncated-challenges`, as the ledger is built. A change of proof system version on Midnight needs a new export and possibly a new core.
-- The SRS is the Filecoin one Midnight uses (`bls_filecoin_2p19`); `[tau]_2` is taken from it.
+- The SRS is Midnight's own (`bls_midnight_2p{k}`, as the proof server uses), not the Filecoin one: a proof from the ledger prover only verifies against Midnight's `[tau]_2`. The tool reads `MIDNIGHT_PARAMS_DIR` and falls back to the `bls_midnight_2p14` bundled in `midnight-transient-crypto`.
 
 ## Reproduce
 
 ```sh
-# official proof + SVK + hints (needs SRS_DIR with bls_filecoin_2p19)
-cd tools/midnight-export && SRS_DIR=... cargo run --release -- ../../fixtures/midnight
+# official proof + SVK + hints (Midnight SRS; k <= 14 needs nothing else)
+cd tools/midnight-export
+cargo run --release -- poseidon ../../fixtures/midnight
+cargo run --release -- zkir-selftest ../../fixtures/midnight   # ledger prover (ZKIR v2) pipeline
+cargo run --release -- compact <name> <ir> <prover> <verifier> <preimage> ../../fixtures/midnight
 # Soroban, native and wasm
 cargo build --release --target wasm32v1-none -p midnight-verifier
 cargo test -p midnight-verifier -- --nocapture

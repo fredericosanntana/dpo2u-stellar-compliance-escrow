@@ -18,14 +18,25 @@ fn unhex(s: &str) -> std::vec::Vec<u8> {
 }
 
 #[test]
-fn real_midnight_proof_through_wasm() {
+fn poseidon_through_wasm() {
+    run("poseidon");
+}
+
+/// ZKIR v2 circuit proven by the ledger's own prover (midnight-zkir 2.2.0)
+/// with Midnight's SRS: the Compact pipeline.
+#[test]
+fn zkir_hash_through_wasm() {
+    run("zkir-hash");
+}
+
+fn run(name: &str) {
     let Ok(wasm) = std::fs::read(WASM) else {
         eprintln!("skipped: {WASM} not built");
         return;
     };
-    let dir = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../fixtures/midnight/poseidon/"
+    let dir = format!(
+        "{}/../../fixtures/midnight/{name}/",
+        env!("CARGO_MANIFEST_DIR")
     );
     let svk = std::fs::read(format!("{dir}vk.svk")).unwrap();
     let proof = std::fs::read(format!("{dir}proof.bin")).unwrap();
@@ -53,7 +64,7 @@ fn real_midnight_proof_through_wasm() {
     assert!(c.verify(&vk, &Bytes::from_slice(&env, &proof), &h, &s));
     let b = env.cost_estimate().budget();
     println!(
-        "wasm midnight verify: cpu {} instructions, mem {} bytes",
+        "wasm midnight verify [{name}]: cpu {} instructions, mem {} bytes",
         b.cpu_instruction_cost(),
         b.memory_bytes_cost()
     );
