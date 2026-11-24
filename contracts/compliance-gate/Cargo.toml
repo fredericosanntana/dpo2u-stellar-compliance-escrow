@@ -1,0 +1,18 @@
+[package]
+name = "compliance-gate"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.91.1"
+description = "Pins the compliance policy (sanctions root, pepper commitment, policy hash, verifier key) and checks proofs against it."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[features]
+testutils = ["soroban-sdk/testutils"]
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

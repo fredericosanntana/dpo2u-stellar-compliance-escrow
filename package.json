@@ -1,0 +1,20 @@
+{
+  "name": "dpo2u-stellar-compliance-escrow",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "cargo test --workspace",
+    "build": "ctg build",
+    "doctor": "ctg doctor --network testnet --source ${CAATINGA_SOURCE:-dpo2u-escrow-testnet}",
+    "deploy:testnet": "ctg deploy --network testnet --source ${CAATINGA_SOURCE:-dpo2u-escrow-testnet} -y",
+    "status": "ctg status --network testnet",
+    "smoke": "ctg smoke --network testnet --source ${CAATINGA_SOURCE:-dpo2u-escrow-testnet}"
+  },
+  "devDependencies": {
+    "@caatinga/cli": "3.14.0",
+    "@caatinga/core": "3.14.0"
+  }
+}
