@@ -232,6 +232,18 @@ fn midnight_policy_is_validated_and_admin_only() {
         s.gate.try_set_midnight_policy(&2, &p),
         Err(Ok(Error::BadMidnightPolicy))
     );
+    let mut p = midnight_policy(&s.env);
+    p.context_encoding = CTX_COMPACT_BYTES32; // needs indices 2 and 3
+    assert_eq!(
+        s.gate.try_set_midnight_policy(&2, &p),
+        Err(Ok(Error::BadMidnightPolicy))
+    );
+    let mut p = midnight_policy(&s.env);
+    p.context_encoding = 7;
+    assert_eq!(
+        s.gate.try_set_midnight_policy(&2, &p),
+        Err(Ok(Error::BadMidnightPolicy))
+    );
     assert_eq!(
         s.gate.try_midnight_policy(&9),
         Err(Ok(Error::UnknownMidnightPolicy))

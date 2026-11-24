@@ -120,6 +120,7 @@ fn world<'a>(from_wasm: bool) -> World<'a> {
             statement_len: 3,
             pins,
             context_index: 2,
+            context_encoding: 0,
             valid_until: 1_796_000_000,
         },
     );

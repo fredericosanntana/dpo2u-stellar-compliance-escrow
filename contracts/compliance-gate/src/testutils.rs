@@ -91,6 +91,7 @@ pub fn midnight_policy(env: &Env) -> MidnightPolicy {
         statement_len: 3,
         pins,
         context_index: 2,
+        context_encoding: 0,
         valid_until: 10_000,
     }
 }
