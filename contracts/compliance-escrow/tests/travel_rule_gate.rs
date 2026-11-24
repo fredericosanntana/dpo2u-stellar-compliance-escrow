@@ -1,12 +1,15 @@
 //! The REAL TravelRuleGate v12 `evaluateTransfer` proof captured on Midnight
 //! preview (fixtures/midnight/travel-rule-gate-v12) through the gate's
 //! Midnight lane, with the verifier as wasm. The capture's `transfer_id`
-//! stands for the escrow context (`CTX_COMPACT_BYTES32` at statement 27..28).
+//! stands for the escrow context (`CTX_COMPACT_BYTES32` at 202..203, the key
+//! of the `status` insert).
 //!
-//! Statement positions (0-based) of the public values of this capture, each a
-//! Compact `Bytes<32>` as [last byte, first 31 bytes LE]:
-//! transfer_id 27, policy_hash 290, list_root 311, pepper_commit 373,
-//! provider_id 114.
+//! Statement positions (0-based). Compact `Bytes<32>` values are
+//! [last byte, first 31 bytes LE]: transfer_id 27 (member) and 202 (status
+//! insert), policy_hash 290, list_root 311, pepper_commit 373, provider_id
+//! 114. Verdict: status 208 (1 = PASS, 2 = FAIL, checked against a real FAIL
+//! capture), fail_reason 228. evaluateTransfer has a fixed statement layout
+//! (417 values) for PASS and FAIL.
 
 use compliance_gate::{
     ComplianceGate, ComplianceGateClient, Error, MidnightPolicy, Pin, CTX_COMPACT_BYTES32,
@@ -25,6 +28,8 @@ const WASM: &str = concat!(
 /// "tr-v12-cap2-20261124T014017", zero padded (public in the Midnight tx).
 const TRANSFER_ID: &str = "74722d7631322d636170322d3230323631313234543031343031370000000000";
 const PINNED: [u32; 8] = [290, 291, 311, 312, 373, 374, 114, 115];
+const STATUS: u32 = 208;
+const FAIL_REASON: u32 = 228;
 
 fn unhex(s: &str) -> std::vec::Vec<u8> {
     (0..s.len())
@@ -71,13 +76,22 @@ fn setup() -> Option<T> {
             value: statement.get(i).unwrap(),
         });
     }
+    // verdict PASS with no fail reason
+    pins.push_back(Pin {
+        index: STATUS,
+        value: U256::from_u32(&env, 1),
+    });
+    pins.push_back(Pin {
+        index: FAIL_REASON,
+        value: U256::from_u32(&env, 0),
+    });
     gate.set_midnight_policy(
         &1,
         &MidnightPolicy {
             vk_hash,
             statement_len: statement.len(),
             pins,
-            context_index: 27,
+            context_index: 202,
             context_encoding: CTX_COMPACT_BYTES32,
             valid_until: u64::MAX,
         },
@@ -136,6 +150,15 @@ fn real_proof_is_refused_for_another_transfer_or_policy() {
     // a statement claiming another rule pack is refused before verification
     let mut s = t.statement.clone();
     s.set(291, s.get(291).unwrap().add(&U256::from_u32(&t.env, 1)));
+    assert_eq!(
+        t.gate
+            .try_check_midnight(&1, &t.ctx, &t.proof, &t.hints, &s),
+        Err(Ok(Error::PinMismatch))
+    );
+    // a FAIL verdict (status 2, reason 4) is refused by the pins
+    let mut s = t.statement.clone();
+    s.set(STATUS, U256::from_u32(&t.env, 2));
+    s.set(FAIL_REASON, U256::from_u32(&t.env, 4));
     assert_eq!(
         t.gate
             .try_check_midnight(&1, &t.ctx, &t.proof, &t.hints, &s),
