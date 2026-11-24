@@ -4,7 +4,7 @@
 
 > Midnight keeps the secret, Stellar moves the money, and the proof is the same.
 
-Status: **phase 0** (scaffold). Testnet only. No real funds.
+Status: **phase 3 done on testnet**: a real Midnight TravelRuleGate proof released testnet USDC on Stellar. Testnet only. No real funds.
 
 ## Contracts
 
@@ -52,7 +52,7 @@ Contract IDs are written to `caatinga.artifacts.json` and wired through `${contr
 0. Scaffold, escrow and gate (done)
 1. Sanctions non-membership circuit (indexed Merkle tree, pepper scheme), real Groth16 release of testnet USDC (done, on testnet)
 2. `midnight-verifier`: no_std port of the midnight-proofs 0.8.2 verifier, VK exported to an SVK blob (done)
-3. Real Midnight TravelRuleGate proof releasing testnet USDC on Stellar
+3. Real Midnight TravelRuleGate proof releasing testnet USDC on Stellar (done, on testnet)
 4. CVM package, demo video
 
 ## License
@@ -82,3 +82,23 @@ Full flow on-chain: `set_policy`, `deposit` of 1 testnet USDC, `release` with a 
 | compliance_escrow | `CCX6ZTGXA363MKEQR3LVGHPEWDMIADQEWOEZ7VCPFLMMMTXS4E5R473T` |
 
 Release tx: `f1a510fe6c02fd3c46f9ffa0c175f646f34b533a21530e5ba510dc9f01947fb0`. Total fees for the 11 transactions: 0.70 XLM, almost all of it the gate wasm upload; the release itself cost 0.0029 XLM. The testnet policy uses a VK and pepper regenerated on the deploy machine, so it differs from `fixtures/`.
+
+## Testnet deployment (phase 3, commit a9e09a4)
+
+A real Midnight proof released testnet USDC on Stellar. The TravelRuleGate v12 on Midnight **preview** evaluated a transfer whose `transfer_id` is the escrow context. Its `evaluateTransfer` proof, made by the official proof-server, was then verified inside Soroban by `midnight-verifier`. The gate's Midnight lane checked the pins and the context, and the escrow paid.
+
+| Contract | ID |
+| --- | --- |
+| midnight-verifier | `CDRVMZMAB4HGSEXRST6KQAO7USVLXPON5YIVLSL4ENVJCGQ5L5PBCWBU` |
+| compliance-gate | `CDF3F3XCMDIYLGC46JK5IMBQBIM657SEQ6PCUMIOORWVVIQ4OQ2523MG` |
+| compliance-escrow | `CBHZIEWBIJC7VYU43NTFZT44IBLAPZT3MYLJZXIGXG3ZQJNIN6UJ7CDU` |
+
+| Step | Tx / value |
+| --- | --- |
+| `register_vk` (TravelRuleGate v12 SVK, k=17) | `1bcc1c40c3247a59f3fea9b45b578a0861a9f4cda31998162adc3dd71dbe718e`, vk_hash `879336d7478b1b686211d1a055caff8c054434e9b8e61e0b69435b654a810fa5` |
+| `deposit` 1 USDC, escrow 1 | `4c46b0369f4befe4f3e2cce1fcdceb86e91864bb94cece7e69344c3fda948f42`, context `00592cfd012267b0b5c5cbada2d5fede666e1966d4cfe6ab6e7462626da3118f` |
+| Midnight preview `evaluateTransfer` PASS, `transfer_id` = context | tx `00ba80c550d57bbe044b16b431e3628806ab99574a4a82d22d69a7efe01b783d1b`, block 246649 |
+| `set_midnight_policy` (pins: policy hash, list root, pepper commitment, provider, status PASS, no fail reason; context at 202, `Bytes<32>`) | `965aa45285340e9f2484616ea1dcd1c0712efd9b479df891cbf028502d8e317f` |
+| `release_midnight` | `ef3e413fae9ddea704600ec217c871a13303cd02d4f69e4bc980439e55debf30`: 328,471,689 CPU instructions (82% of the cap), 0.0162 XLM, events verdict pass=true, transfer 1 USDC, released |
+
+The proof, statement and hints are in `fixtures/midnight/escrow-bound/`. The sanctions snapshot and pepper are fictitious and disposable, and no personal data is involved. Total testnet fees were 9.995 XLM, almost all of it wasm upload. Build the wasm with `cargo build --release --target wasm32v1-none` (`npm run build`): the verifier crates are tuned for speed (`opt-level = 3`), which is what the 313M figure assumes.
