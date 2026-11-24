@@ -200,10 +200,11 @@ fn poseidon(out: &str) {
 
 fn main() {
     let a: Vec<String> = std::env::args().collect();
-    let usage = "usage: midnight-export poseidon <out> | zkir-selftest <out> | compact <name> <ir> <prover> <verifier> <preimage> <out>";
+    let usage = "usage: midnight-export poseidon <out> | zkir-selftest <out> | zkir-context <name> <context_be_hex> <out> | compact <name> <ir> <prover> <verifier> <preimage> <out>";
     match a.get(1).map(String::as_str) {
         Some("poseidon") => poseidon(&a[2]),
         Some("zkir-selftest") => zkir::selftest(&a[2]),
+        Some("zkir-context") if a.len() == 5 => zkir::context(&a[2], &a[3], &a[4]),
         Some("compact") if a.len() == 8 => zkir::from_files(
             &a[2],
             Path::new(&a[3]),

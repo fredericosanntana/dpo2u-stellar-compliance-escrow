@@ -2,7 +2,7 @@
 extern crate std;
 
 use crate::*;
-use soroban_sdk::{contract, contractimpl, Env, Vec, U256};
+use soroban_sdk::{contract, contractimpl, Bytes, BytesN, Env, Vec, U256};
 
 // Generator points of BLS12-381 (uncompressed, big-endian). Any valid points
 // work here: the mock verifier below decides the outcome.
@@ -56,6 +56,42 @@ impl MockVerifier {
         _pub_signals: Vec<Fr>,
     ) -> bool {
         env.storage().instance().get(&0u32).unwrap_or(false)
+    }
+}
+
+/// Stand-in for midnight-verifier.
+#[contract]
+pub struct MockMidnight;
+
+#[contractimpl]
+impl MockMidnight {
+    pub fn set_result(env: Env, ok: bool) {
+        env.storage().instance().set(&0u32, &ok);
+    }
+    pub fn verify(
+        env: Env,
+        _vk_hash: BytesN<32>,
+        _proof: Bytes,
+        _hints: Vec<BytesN<96>>,
+        _statement: Vec<U256>,
+    ) -> bool {
+        env.storage().instance().get(&0u32).unwrap_or(false)
+    }
+}
+
+/// Midnight policy with statement `[binding, policy_hash, context]`.
+pub fn midnight_policy(env: &Env) -> MidnightPolicy {
+    let mut pins = Vec::new(env);
+    pins.push_back(Pin {
+        index: 1,
+        value: u(env, 0xA4),
+    });
+    MidnightPolicy {
+        vk_hash: BytesN::from_array(env, &[9u8; 32]),
+        statement_len: 3,
+        pins,
+        context_index: 2,
+        valid_until: 10_000,
     }
 }
 

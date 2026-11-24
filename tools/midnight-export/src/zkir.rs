@@ -7,7 +7,7 @@ use std::{borrow::Cow, fs, io::Cursor, path::Path, sync::Arc};
 use group::{prime::PrimeCurveAffine, Curve};
 use midnight_curves::G2Affine;
 use midnight_proofs::utils::SerdeFormat;
-use midnight_serialize::{tagged_deserialize, Deserializable, Serializable};
+use midnight_serialize::{tagged_deserialize, tagged_serialize, Deserializable, Serializable};
 use midnight_transient_crypto::{
     curve::Fr,
     proofs::{
@@ -100,6 +100,10 @@ pub fn run(
     crate::report(name, &svk, &proof.0);
     crate::check(name, &svk, &pi, &proof.0);
     crate::write(out, name, &svk, &pi, &proof.0);
+    // the ledger's own key (tagged), for other verifiers' cross checks
+    let mut tagged = Vec::new();
+    tagged_serialize(vk, &mut tagged).unwrap();
+    fs::write(Path::new(out).join(name).join("ledger.verifier"), tagged).unwrap();
 }
 
 /// A ZKIR v2 circuit built here (Poseidon-based `transient_hash` plus a
@@ -130,6 +134,45 @@ pub fn selftest(out: &str) {
         key_location: KeyLocation(Cow::Borrowed("builtin")),
     };
     run("zkir-hash", &ir, pk, &vk, &preimage, out);
+}
+
+/// ZKIR v2 circuit for the escrow end-to-end test. Statement:
+/// `[binding_input, transient_hash(a, b, c), context]`: the prover knows the
+/// preimage of a pinned commitment (stands for the rule pack) and binds the
+/// proof to one escrow `context` (big-endian hex, < r).
+pub fn context(name: &str, context_be: &str, out: &str) {
+    use ff::PrimeField;
+    use midnight_transient_crypto::hash::transient_hash;
+    let mut le: [u8; 32] = hex::decode(context_be)
+        .expect("hex")
+        .try_into()
+        .expect("32 bytes");
+    le.reverse();
+    let ctx = Fr(Option::from(midnight_curves::Fq::from_repr(le)).expect("context >= r"));
+    let ir_raw = r#"{
+       "version": { "major": 2, "minor": 2 },
+       "num_inputs": 4,
+       "do_communications_commitment": false,
+       "instructions": [
+           { "op": "transient_hash", "inputs": [0, 1, 2] },
+           { "op": "declare_pub_input", "var": 4 },
+           { "op": "declare_pub_input", "var": 3 },
+           { "op": "pi_skip", "guard": null, "count": 2}
+       ]
+    }"#;
+    let ir = IrSource::load(ir_raw.as_bytes()).unwrap();
+    let (pk, vk) = pollster::block_on(ir.v2_keygen(&Srs)).unwrap();
+    let h = transient_hash(&[11.into(), 22.into(), 33.into()]);
+    let preimage = ProofPreimage {
+        binding_input: 42.into(),
+        communications_commitment: None,
+        inputs: vec![11.into(), 22.into(), 33.into(), ctx],
+        private_transcript: vec![],
+        public_transcript_inputs: vec![h, ctx],
+        public_transcript_outputs: vec![],
+        key_location: KeyLocation(Cow::Borrowed("builtin")),
+    };
+    run(name, &ir, pk, &vk, &preimage, out);
 }
 
 /// Compact artifacts from disk: `.bzkir` (or JSON `.zkir`), `.prover`,

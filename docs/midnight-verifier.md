@@ -41,6 +41,22 @@ The transcript always absorbs the proof's own compressed bytes, so a hint can on
 - `vk(vk_hash) -> Option<Bytes>`
 - `verify(vk_hash, proof, hints, statement) -> bool`: `false` for any proof that does not verify. Errors: `UnknownVk`, `BadVk`, `ValueOutOfField`, `UnsupportedVk`.
 
+## Gate Midnight lane and escrow release (phase 3)
+
+`compliance-gate` keeps a `MidnightPolicy` per `policy_id`, set by the admin with `set_midnight_policy` (event `midnight_policy_set`):
+
+| Field | Meaning |
+| --- | --- |
+| `vk_hash` | sha256 of the SVK registered in `midnight-verifier` |
+| `statement_len` | exact statement length of the circuit |
+| `pins` | `(index, value)` pairs the statement must carry: sanctions root, rule-pack hash, gate address, as the circuit exposes them |
+| `context_index` | statement index that must equal the escrow `context` (no replay on another escrow) |
+| `valid_until` | the lane refuses proofs after this ledger time |
+
+A Compact statement is `[binding_input, public transcript..]` (midnight-zkir `ir_vm.rs`), so the layout is circuit specific and lives in the policy, not in code. `check_midnight(policy_id, context, proof, hints, statement)` checks the length, the pins, the context and the expiry, then calls `midnight-verifier.verify`. `compliance-escrow.release_midnight(id, proof, hints, statement)` pays only if it passes; any refusal reverts and the escrow stays `Funded`.
+
+End to end test (`contracts/compliance-escrow/tests/midnight_proof.rs`): a ZKIR v2 circuit proved with the ledger prover (`midnight-export zkir-context`) whose statement is `[binding_input, commitment, context]`, bound to `escrow.context(1)`. Real midnight-verifier, gate and escrow with a SAC as USDC: released, tampered proof and wrong context refused. `release_midnight` with the verifier as wasm: **175,948,986 CPU (44% of the cap), 3.0 MB**. This circuit stands in for the TravelRuleGate; the real gate proof plugs into the same lane with its own pins.
+
 ## Trust model
 
 A `true` means the statement satisfies the circuit behind the pinned VK. It does not mean the proof was accepted on the Midnight ledger; that would need a light client. The relayer only transports the proof and the hints. The admin who registers an SVK is trusted to export it from the right Midnight VK; the export is reproducible with `tools/midnight-export`, and the vk_hash pins the exact bytes.

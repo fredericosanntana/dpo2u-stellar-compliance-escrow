@@ -448,6 +448,7 @@ dependencies = [
  "ark-serialize 0.4.2",
  "circom-verifier",
  "compliance-gate",
+ "midnight-verifier",
  "serde_json",
  "soroban-sdk",
 ]
