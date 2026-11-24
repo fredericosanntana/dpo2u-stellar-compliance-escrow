@@ -69,3 +69,16 @@ Apache-2.0
 | compliance_escrow | `CCZC6E2ZRQON7JXP7VBDS5UTXEJX23MTF4E7U55QIDEKE57PEWPX6KKM` |
 
 Admin: testnet-only identity `GB6JK2QZMCM55HQH64KMQE6G4MCZBQHRR66QEY6DI4UOKZMCKAZYRMEY`. `ctg smoke` passes (gate.admin, escrow.gate, midnight_verifier.vk_hash).
+
+## Testnet deployment (phase 1, commit 8ed6335)
+
+Full flow on-chain: `set_policy`, `deposit` of 1 testnet USDC, `release` with a real Groth16 proof (verdict pass=true). A replayed old proof is refused with `RootMismatch` (#4) in simulation.
+
+| Contract | ID |
+| --- | --- |
+| circom_verifier | `CAO374QVP2NFCXVOXCY7ZTR6FJ4FRP6UXC2O3NFIOKK7SYANWMFSW3FP` |
+| midnight_verifier | `CC5KN73DOKIGPEJH3UTLNUSWCTFPP3SZUUSKIRZJRKCWFELNAQHHVQ4U` |
+| compliance_gate | `CBH2YR3HNYZBVZBSZNMTUL3XCR6I2WCMZ6GVWQM76MOKX7RT2V7CQID5` |
+| compliance_escrow | `CCX6ZTGXA363MKEQR3LVGHPEWDMIADQEWOEZ7VCPFLMMMTXS4E5R473T` |
+
+Release tx: `f1a510fe6c02fd3c46f9ffa0c175f646f34b533a21530e5ba510dc9f01947fb0`. Total fees for the 11 transactions: 0.70 XLM, almost all of it the gate wasm upload; the release itself cost 0.0029 XLM. The testnet policy uses a VK and pepper regenerated on the deploy machine, so it differs from `fixtures/`.

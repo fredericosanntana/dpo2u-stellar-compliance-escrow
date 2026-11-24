@@ -16,3 +16,8 @@ Honest notes from building this project with `@caatinga/cli` 3.14.0 and Stellar 
 | 2026-11-23 | `ctg status` | Repeats the "add a frontend section" hint for every contract (24 lines), no way to silence it | None |
 | 2026-11-23 | `ctg deploy` | Rewrites `caatinga.artifacts.json` and moves `"version": 2` to the end, a noisy diff | None |
 | 2026-11-23 | VPS testnet deploy | No ready image with Rust 1.91.1 + wasm32v1-none + Stellar CLI 28 + Node 22 | Toolchain assembled by hand in a disposable container |
+| 2026-11-24 | `ctg deploy` after a wasm change | Plain deploy skips every contract as "already deployed" even when the wasm changed, with no warning, and still rewrites the artifacts file | `--force` / `--if-changed` |
+| 2026-11-24 | `ctg deploy --force` | Adds `history` and `upgradeStrategy` to the artifacts file; neither is documented in `--help` | None |
+| 2026-11-24 | circom download in CI/VPS logs | The progress bar prints hundreds of lines without a TTY | None |
+| 2026-11-24 | Calling gate/escrow with a snarkjs proof | No helper converts snarkjs JSON to Stellar CLI arguments (G1 96 bytes, G2 192 bytes big-endian, G2 as c1‖c0); `ctg zk invoke` only covers the verifier | Wrote a converter, checked with a simulated `verify_proof` |
+| 2026-11-24 | `ctg zk build` on another machine | Always regenerates the dev setup; without the original zkey the VK cannot be reused, so a new context forces a policy rotation | Rotated policy 1 (same policy_hash and window) |
