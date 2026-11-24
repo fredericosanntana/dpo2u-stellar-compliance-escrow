@@ -7,7 +7,7 @@ A transfer is released only when four layers pass together. Data protection is n
 | Data protection | LGPD (Lei 13.709/2018): minimization and purpose (art. 6), legal basis (art. 7, II), international transfer (art. 33), data-subject rights (art. 18), security (art. 46), incident notice (art. 48), DPIA/RIPD (art. 38); GDPR for global flows | No personal data or reversible hash on-chain: only commitments and proofs. Identifiers stay with the PSAV and in Midnight private state | Midnight, PSAV |
 | Travel Rule | FATF Recommendation 16; BCB Resolutions 519-521/2025 | Originator/beneficiary data proven present and consistent; disclosed only to the counterparty PSAV | Midnight TravelRuleGate |
 | Sanctions and AML | Lei 9.613/1998; Lei 13.810/2019; Resolução CVM 50/2021 | Indexed-Merkle non-membership proof against a provider-signed snapshot, pinned root and freshness window | Midnight and Soroban (same statement) |
-| PSAV and securities | Lei 14.478/2022; BCB Resolutions 519-521/2025; Parecer de Orientação CVM 40/2022; Resoluções CVM 88/2022 and 30/2021 | Only authorized PSAVs and eligible investors; escrow delivers the asset only with the proof | Soroban escrow |
+| PSAV and securities | Lei 14.478/2022; BCB Resolutions 519-521/2025; Parecer de Orientação CVM 40/2022; Resoluções CVM 88/2022 and 30/2021 | Only authorized PSAVs and eligible investors; escrow and DvP deliver the asset only with the proof, and the security's issuer still authorizes each holder (see [cvm-package.md](cvm-package.md)) | Soroban escrow, `compliance-dvp`, token flags |
 
 ## Data-protection decisions the code follows
 

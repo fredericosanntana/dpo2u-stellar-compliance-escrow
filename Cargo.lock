@@ -440,6 +440,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "compliance-dvp"
+version = "0.1.0"
+dependencies = [
+ "compliance-gate",
+ "midnight-verifier",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "compliance-escrow"
 version = "0.1.0"
 dependencies = [
